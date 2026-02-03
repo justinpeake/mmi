@@ -390,12 +390,96 @@
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  margin-top: auto;
+  margin-top: 0.75rem;
   transition: background 0.2s;
 }
 
 .cc-btn-connect:hover {
   background: #6d28d9;
+}
+
+/* Suggested connections on client cards */
+.cc-suggested-connections {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cc-suggested-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.cc-suggested-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cc-suggested-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cc-suggested-card:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.cc-suggested-card-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cc-suggested-connect {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: #7c3aed;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.cc-suggested-connect:hover {
+  background: #6d28d9;
+}
+
+.cc-suggested-connected {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: #22c55e;
+  border: none;
+  border-radius: 6px;
+  cursor: default;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.cc-suggested-connected:disabled {
+  opacity: 1;
 }
 
 /* Tab counts (dynamic) */
@@ -722,6 +806,10 @@
 
 .cc-modal-actions-detail {
   justify-content: space-between;
+}
+
+#cc-modal-helper-detail.from-suggested #cc-helper-detail-remove {
+  display: none;
 }
 
 .cc-remove-confirm {

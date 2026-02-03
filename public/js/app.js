@@ -92,6 +92,11 @@
     var ccPanels = document.querySelectorAll('.cc-panel');
     var ccCounts = { clients: 3, helpers: 4, connections: 1 };
 
+    /** Single source of truth for connections. { clientName, helperName } */
+    var connectionsList = [
+      { clientName: 'Margaret Thompson', helperName: 'Sarah Martinez' }
+    ];
+
     function updateCcCounts() {
       var clientsEl = document.getElementById('cc-count-clients');
       var helpersEl = document.getElementById('cc-count-helpers');
@@ -117,8 +122,6 @@
         if (panelId) showCcPanel(panelId);
       });
     });
-
-    updateCcCounts();
 
     var modalAddClient = document.getElementById('cc-modal-add-client');
     var overlayAddClient = document.getElementById('cc-modal-add-client-overlay');
@@ -209,10 +212,22 @@
         connectBtn.textContent = 'Connect Helper';
         article.appendChild(connectBtn);
 
+        var suggestedWrap = document.createElement('div');
+        suggestedWrap.className = 'cc-suggested-connections';
+        var suggestedTitle = document.createElement('p');
+        suggestedTitle.className = 'cc-suggested-title';
+        suggestedTitle.textContent = 'Suggested connections';
+        suggestedWrap.appendChild(suggestedTitle);
+        var suggestedList = document.createElement('div');
+        suggestedList.className = 'cc-suggested-list';
+        suggestedWrap.appendChild(suggestedList);
+        article.appendChild(suggestedWrap);
+
         clientsCardsContainer.appendChild(article);
         ccCounts.clients += 1;
         updateCcCounts();
         closeAddClientModal();
+        updateSuggestedConnectionsForAllClients();
       });
     }
 
@@ -265,14 +280,128 @@
       hideRemoveConfirm();
     }
 
+    function getClientTagsFromCard(card) {
+      var tagEls = card.querySelectorAll('.cc-needs-label + .cc-tags .cc-tag');
+      if (tagEls.length === 0) tagEls = card.querySelectorAll('.cc-tags .cc-tag');
+      var tags = [];
+      for (var i = 0; i < tagEls.length; i++) tags.push(tagEls[i].textContent.trim().toLowerCase());
+      return tags;
+    }
+
+    function getAllHelpersData() {
+      var helperCards = document.querySelectorAll('#cc-panel-helpers .cc-helper-card');
+      var list = [];
+      for (var i = 0; i < helperCards.length; i++) {
+        list.push(getHelperDataFromCard(helperCards[i]));
+      }
+      return list;
+    }
+
+    function isConnected(clientName, helperName) {
+      for (var i = 0; i < connectionsList.length; i++) {
+        if (connectionsList[i].clientName === clientName && connectionsList[i].helperName === helperName) return true;
+      }
+      return false;
+    }
+
+    function getSuggestedHelpersForClient(clientTags, allHelpers) {
+      if (clientTags.length === 0) return [];
+      var withScore = [];
+      for (var i = 0; i < allHelpers.length; i++) {
+        var h = allHelpers[i];
+        var matchCount = 0;
+        for (var j = 0; j < h.needs.length; j++) {
+          var tag = (h.needs[j] || '').trim().toLowerCase();
+          if (tag && clientTags.indexOf(tag) !== -1) matchCount++;
+        }
+        if (matchCount > 0) withScore.push({ helper: h, score: matchCount });
+      }
+      withScore.sort(function (a, b) { return b.score - a.score; });
+      return withScore.map(function (x) { return x.helper; });
+    }
+
+    function buildSuggestedListHTML(helpers, clientName) {
+      var html = '';
+      for (var i = 0; i < helpers.length; i++) {
+        var h = helpers[i];
+        var needsStr = (h.needs || []).join(', ');
+        var name = (h.name || '').replace(/"/g, '&quot;');
+        var since = (h.since || '').replace(/"/g, '&quot;');
+        var bio = (h.bio || '').replace(/"/g, '&quot;');
+        var needsAttr = needsStr.replace(/"/g, '&quot;');
+        var connected = isConnected(clientName, h.name);
+        var btnClass = connected ? 'cc-suggested-connected' : 'cc-suggested-connect';
+        var btnText = connected ? 'Connected' : 'Connect';
+        html += '<div class="cc-suggested-card" role="button" tabindex="0" data-helper-name="' + name + '" data-helper-since="' + since + '" data-helper-bio="' + bio + '" data-helper-needs="' + needsAttr + '">';
+        html += '<span class="cc-suggested-card-name">' + (h.name || '') + '</span>';
+        html += '<button type="button" class="' + btnClass + '"' + (connected ? ' disabled' : '') + '>' + btnText + '</button>';
+        html += '</div>';
+      }
+      return html;
+    }
+
+    function getClientNameFromCard(clientCard) {
+      var nameEl = clientCard.querySelector('.cc-client-name');
+      return nameEl ? nameEl.textContent.trim() : '';
+    }
+
+    function updateSuggestedConnectionsForClient(clientCard) {
+      var listEl = clientCard.querySelector('.cc-suggested-list');
+      if (!listEl) return;
+      var clientName = getClientNameFromCard(clientCard);
+      var clientTags = getClientTagsFromCard(clientCard);
+      var allHelpers = getAllHelpersData();
+      var suggested = getSuggestedHelpersForClient(clientTags, allHelpers);
+      listEl.innerHTML = buildSuggestedListHTML(suggested, clientName);
+    }
+
+    function updateSuggestedConnectionsForAllClients() {
+      var clientCards = document.querySelectorAll('#cc-panel-clients .cc-client-card');
+      for (var i = 0; i < clientCards.length; i++) {
+        updateSuggestedConnectionsForClient(clientCards[i]);
+      }
+    }
+
     if (clientsCardsContainer) {
       clientsCardsContainer.addEventListener('click', function (e) {
+        if (e.target.closest('.cc-suggested-card')) return;
         if (e.target.closest('.cc-btn-connect')) return;
         var card = e.target.closest('.cc-client-card');
         if (!card) return;
         openClientDetailModal(card);
       });
+      clientsCardsContainer.addEventListener('click', function (e) {
+        var connectBtn = e.target.closest('.cc-suggested-connect');
+        if (connectBtn && !connectBtn.disabled) {
+          e.preventDefault();
+          e.stopPropagation();
+          var suggestedCard = connectBtn.closest('.cc-suggested-card');
+          var clientCard = suggestedCard ? suggestedCard.closest('.cc-client-card') : null;
+          if (!suggestedCard || !clientCard) return;
+          var clientName = getClientNameFromCard(clientCard);
+          var helperName = (suggestedCard.getAttribute('data-helper-name') || '').trim();
+          if (!clientName || !helperName) return;
+          connectionsList.push({ clientName: clientName, helperName: helperName });
+          renderConnectionsPanel();
+          updateCcCounts();
+          updateSuggestedConnectionsForAllClients();
+          return;
+        }
+        var suggestedCard = e.target.closest('.cc-suggested-card');
+        if (!suggestedCard) return;
+        if (e.target.closest('.cc-suggested-connected')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var name = suggestedCard.getAttribute('data-helper-name') || '';
+        var since = suggestedCard.getAttribute('data-helper-since') || '';
+        var bio = suggestedCard.getAttribute('data-helper-bio') || '';
+        var needsStr = suggestedCard.getAttribute('data-helper-needs') || '';
+        var needs = needsStr ? needsStr.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+        openHelperDetailModalWithData({ name: name, since: since, bio: bio, needs: needs });
+      });
     }
+
+    updateSuggestedConnectionsForAllClients();
 
     var removeConfirmEl = document.getElementById('cc-remove-confirm');
     var clientDetailActionsEl = document.getElementById('cc-client-detail-actions');
@@ -396,6 +525,7 @@
         ccCounts.helpers += 1;
         updateCcCounts();
         closeAddHelperModal();
+        updateSuggestedConnectionsForAllClients();
       });
     }
 
@@ -426,6 +556,7 @@
 
     function openHelperDetailModal(card) {
       currentHelperCard = card;
+      if (modalHelperDetail) modalHelperDetail.classList.remove('from-suggested');
       var data = getHelperDataFromCard(card);
       if (helperDetailName) helperDetailName.textContent = data.name || '';
       if (helperDetailSince) helperDetailSince.textContent = data.since || '';
@@ -442,8 +573,29 @@
       if (modalHelperDetail) modalHelperDetail.hidden = false;
     }
 
+    function openHelperDetailModalWithData(data) {
+      currentHelperCard = null;
+      if (modalHelperDetail) modalHelperDetail.classList.add('from-suggested');
+      if (helperDetailName) helperDetailName.textContent = data.name || '';
+      if (helperDetailSince) helperDetailSince.textContent = data.since || '';
+      if (helperDetailBio) helperDetailBio.textContent = data.bio || '';
+      if (helperDetailNeeds) {
+        helperDetailNeeds.innerHTML = '';
+        (data.needs || []).forEach(function (tag) {
+          var span = document.createElement('span');
+          span.className = 'cc-tag';
+          span.textContent = tag.trim();
+          helperDetailNeeds.appendChild(span);
+        });
+      }
+      if (modalHelperDetail) modalHelperDetail.hidden = false;
+    }
+
     function closeHelperDetailModal() {
-      if (modalHelperDetail) modalHelperDetail.hidden = true;
+      if (modalHelperDetail) {
+        modalHelperDetail.hidden = true;
+        modalHelperDetail.classList.remove('from-suggested');
+      }
       currentHelperCard = null;
       hideHelperRemoveConfirm();
     }
@@ -493,22 +645,54 @@
 
     var connectionCardsEl = document.getElementById('cc-connection-cards');
     var connectionsEmptyEl = document.getElementById('cc-connections-empty');
-    if (connectionCardsEl && connectionsEmptyEl) {
-      connectionsEmptyEl.hidden = connectionCardsEl.children.length > 0;
+
+    function renderConnectionsPanel() {
+      ccCounts.connections = connectionsList.length;
+      if (!connectionCardsEl) return;
+      var dateStr = new Date().toISOString().slice(0, 10);
+      var html = '';
+      for (var i = 0; i < connectionsList.length; i++) {
+        var c = connectionsList[i];
+        var clientEsc = (c.clientName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+        var helperEsc = (c.helperName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+        html += '<article class="cc-connection-card" data-client-name="' + clientEsc + '" data-helper-name="' + helperEsc + '">';
+        html += '<div class="cc-connection-header">';
+        html += '<div class="cc-connection-title-row">';
+        html += '<span class="cc-connection-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>';
+        html += '<span class="cc-connection-label">Connection</span></div>';
+        html += '<span class="cc-badge cc-badge-active">Active</span></div>';
+        html += '<p class="cc-connection-date"><span class="cc-connection-date-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Connected ' + dateStr + '</p>';
+        html += '<div class="cc-connection-parties">';
+        html += '<div class="cc-connection-field"><label class="cc-connection-field-label">Client</label><div class="cc-connection-field-value">' + (c.clientName || '') + '</div></div>';
+        html += '<span class="cc-connection-link-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>';
+        html += '<div class="cc-connection-field"><label class="cc-connection-field-label">Helper</label><div class="cc-connection-field-value">' + (c.helperName || '') + '</div></div>';
+        html += '</div>';
+        html += '<button type="button" class="cc-btn-disconnect" aria-label="Disconnect"><span class="cc-btn-disconnect-icon" aria-hidden="true">×</span> Disconnect</button>';
+        html += '</article>';
+      }
+      connectionCardsEl.innerHTML = html;
+      if (connectionsEmptyEl) connectionsEmptyEl.hidden = connectionsList.length > 0;
+      updateCcCounts();
     }
+
+    renderConnectionsPanel();
 
     if (connectionCardsEl) {
       connectionCardsEl.addEventListener('click', function (e) {
-      var btn = e.target.closest('.cc-btn-disconnect');
-      if (!btn) return;
-      var card = btn.closest('.cc-connection-card');
-      if (!card) return;
-      card.remove();
-      ccCounts.connections = Math.max(0, ccCounts.connections - 1);
-      updateCcCounts();
-      var cards = document.getElementById('cc-connection-cards');
-      var empty = document.getElementById('cc-connections-empty');
-      if (empty && cards && cards.children.length === 0) empty.hidden = false;
+        var btn = e.target.closest('.cc-btn-disconnect');
+        if (!btn) return;
+        var card = btn.closest('.cc-connection-card');
+        if (!card) return;
+        var clientName = (card.getAttribute('data-client-name') || '').trim();
+        var helperName = (card.getAttribute('data-helper-name') || '').trim();
+        for (var i = connectionsList.length - 1; i >= 0; i--) {
+          if (connectionsList[i].clientName === clientName && connectionsList[i].helperName === helperName) {
+            connectionsList.splice(i, 1);
+            break;
+          }
+        }
+        renderConnectionsPanel();
+        updateSuggestedConnectionsForAllClients();
       });
     }
 
