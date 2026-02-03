@@ -213,6 +213,16 @@
   border-color: #d1d5db;
 }
 
+.cc-helper-card {
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.cc-helper-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #d1d5db;
+}
+
 .cc-client-header {
   display: flex;
   align-items: flex-start;

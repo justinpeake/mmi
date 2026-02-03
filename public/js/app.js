@@ -276,6 +276,184 @@
     if (btnRemoveConfirmCancel) btnRemoveConfirmCancel.addEventListener('click', hideRemoveConfirm);
     if (btnRemoveConfirmYes) btnRemoveConfirmYes.addEventListener('click', doRemoveClient);
 
+    var modalAddHelper = document.getElementById('cc-modal-add-helper');
+    var overlayAddHelper = document.getElementById('cc-modal-add-helper-overlay');
+    var btnAddHelper = document.getElementById('cc-btn-add-helper');
+    var btnCancelAddHelper = document.getElementById('cc-modal-add-helper-cancel');
+    var formAddHelper = document.getElementById('cc-form-add-helper');
+    var helpersCardsContainer = document.querySelector('#cc-panel-helpers .cc-helper-cards');
+
+    function openAddHelperModal() {
+      if (modalAddHelper) modalAddHelper.hidden = false;
+    }
+
+    function closeAddHelperModal() {
+      if (modalAddHelper) modalAddHelper.hidden = true;
+      if (formAddHelper) formAddHelper.reset();
+    }
+
+    if (btnAddHelper) btnAddHelper.addEventListener('click', openAddHelperModal);
+    if (overlayAddHelper) overlayAddHelper.addEventListener('click', closeAddHelperModal);
+    if (btnCancelAddHelper) btnCancelAddHelper.addEventListener('click', closeAddHelperModal);
+
+    if (formAddHelper && helpersCardsContainer) {
+      formAddHelper.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var nameInput = document.getElementById('cc-add-helper-name');
+        var sinceInput = document.getElementById('cc-add-helper-since');
+        var bioInput = document.getElementById('cc-add-helper-bio');
+        var needsInput = document.getElementById('cc-add-helper-needs');
+        var name = (nameInput && nameInput.value.trim()) || '';
+        if (!name) return;
+        var since = (sinceInput && sinceInput.value.trim()) || '';
+        var bio = (bioInput && bioInput.value.trim()) || '';
+        var needsText = (needsInput && needsInput.value.trim()) || '';
+        var needsList = needsText ? needsText.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+
+        var avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&size=112&background=e9d5ff&color=6d28d9';
+
+        var article = document.createElement('article');
+        article.className = 'cc-helper-card';
+        var header = document.createElement('div');
+        header.className = 'cc-client-header';
+        var img = document.createElement('img');
+        img.className = 'cc-client-avatar';
+        img.src = avatarUrl;
+        img.alt = '';
+        header.appendChild(img);
+        var info = document.createElement('div');
+        info.className = 'cc-client-info';
+        var h2 = document.createElement('h2');
+        h2.className = 'cc-client-name';
+        h2.textContent = name;
+        info.appendChild(h2);
+        var ageP = document.createElement('p');
+        ageP.className = 'cc-client-age';
+        ageP.textContent = since ? 'Volunteer since ' + since : '';
+        info.appendChild(ageP);
+        header.appendChild(info);
+        article.appendChild(header);
+        var bioP = document.createElement('p');
+        bioP.className = 'cc-client-bio';
+        bioP.textContent = bio || '';
+        article.appendChild(bioP);
+        var needsLabel = document.createElement('p');
+        needsLabel.className = 'cc-needs-label';
+        needsLabel.textContent = 'Can help with:';
+        article.appendChild(needsLabel);
+        var tagsDiv = document.createElement('div');
+        tagsDiv.className = 'cc-tags';
+        needsList.forEach(function (tag) {
+          var span = document.createElement('span');
+          span.className = 'cc-tag';
+          span.textContent = tag;
+          tagsDiv.appendChild(span);
+        });
+        article.appendChild(tagsDiv);
+        var connectBtn = document.createElement('button');
+        connectBtn.type = 'button';
+        connectBtn.className = 'cc-btn-connect';
+        connectBtn.textContent = 'Connect';
+        article.appendChild(connectBtn);
+        helpersCardsContainer.appendChild(article);
+        ccCounts.helpers += 1;
+        updateCcCounts();
+        closeAddHelperModal();
+      });
+    }
+
+    var modalHelperDetail = document.getElementById('cc-modal-helper-detail');
+    var overlayHelperDetail = document.getElementById('cc-modal-helper-detail-overlay');
+    var btnCloseHelperDetail = document.getElementById('cc-modal-helper-detail-close');
+    var btnRemoveHelper = document.getElementById('cc-helper-detail-remove');
+    var helperDetailName = document.getElementById('cc-helper-detail-name');
+    var helperDetailSince = document.getElementById('cc-helper-detail-since');
+    var helperDetailBio = document.getElementById('cc-helper-detail-bio');
+    var helperDetailNeeds = document.getElementById('cc-helper-detail-needs');
+    var helperRemoveConfirmEl = document.getElementById('cc-helper-remove-confirm');
+    var helperDetailActionsEl = document.getElementById('cc-helper-detail-actions');
+    var btnHelperRemoveConfirmCancel = document.getElementById('cc-helper-remove-confirm-cancel');
+    var btnHelperRemoveConfirmYes = document.getElementById('cc-helper-remove-confirm-yes');
+    var currentHelperCard = null;
+
+    function getHelperDataFromCard(card) {
+      var nameEl = card.querySelector('.cc-client-name');
+      var ageEl = card.querySelector('.cc-client-age');
+      var bioEl = card.querySelector('.cc-client-bio');
+      var tagEls = card.querySelectorAll('.cc-tags .cc-tag');
+      var needs = [];
+      for (var i = 0; i < tagEls.length; i++) needs.push(tagEls[i].textContent);
+      var since = ageEl ? ageEl.textContent.replace(/^Volunteer since\s*/i, '') : '';
+      return { name: nameEl ? nameEl.textContent : '', since: since, bio: bioEl ? bioEl.textContent : '', needs: needs };
+    }
+
+    function openHelperDetailModal(card) {
+      currentHelperCard = card;
+      var data = getHelperDataFromCard(card);
+      if (helperDetailName) helperDetailName.textContent = data.name || '';
+      if (helperDetailSince) helperDetailSince.textContent = data.since || '';
+      if (helperDetailBio) helperDetailBio.textContent = data.bio || '';
+      if (helperDetailNeeds) {
+        helperDetailNeeds.innerHTML = '';
+        data.needs.forEach(function (tag) {
+          var span = document.createElement('span');
+          span.className = 'cc-tag';
+          span.textContent = tag;
+          helperDetailNeeds.appendChild(span);
+        });
+      }
+      if (modalHelperDetail) modalHelperDetail.hidden = false;
+    }
+
+    function closeHelperDetailModal() {
+      if (modalHelperDetail) modalHelperDetail.hidden = true;
+      currentHelperCard = null;
+      hideHelperRemoveConfirm();
+    }
+
+    function showHelperRemoveConfirm() {
+      if (helperRemoveConfirmEl) helperRemoveConfirmEl.hidden = false;
+      if (helperDetailActionsEl) helperDetailActionsEl.hidden = true;
+    }
+
+    function hideHelperRemoveConfirm() {
+      if (helperRemoveConfirmEl) helperRemoveConfirmEl.hidden = true;
+      if (helperDetailActionsEl) helperDetailActionsEl.hidden = false;
+    }
+
+    function doRemoveHelper() {
+      if (!currentHelperCard) return;
+      currentHelperCard.remove();
+      ccCounts.helpers = Math.max(0, ccCounts.helpers - 1);
+      updateCcCounts();
+      hideHelperRemoveConfirm();
+      closeHelperDetailModal();
+    }
+
+    if (helpersCardsContainer) {
+      helpersCardsContainer.addEventListener('click', function (e) {
+        if (e.target.closest('.cc-btn-connect')) return;
+        var card = e.target.closest('.cc-helper-card');
+        if (!card) return;
+        openHelperDetailModal(card);
+      });
+    }
+
+    if (overlayHelperDetail) overlayHelperDetail.addEventListener('click', closeHelperDetailModal);
+    if (btnCloseHelperDetail) btnCloseHelperDetail.addEventListener('click', closeHelperDetailModal);
+
+    if (btnRemoveHelper) {
+      btnRemoveHelper.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!currentHelperCard) return;
+        showHelperRemoveConfirm();
+      });
+    }
+
+    if (btnHelperRemoveConfirmCancel) btnHelperRemoveConfirmCancel.addEventListener('click', hideHelperRemoveConfirm);
+    if (btnHelperRemoveConfirmYes) btnHelperRemoveConfirmYes.addEventListener('click', doRemoveHelper);
+
     var connectionCardsEl = document.getElementById('cc-connection-cards');
     var connectionsEmptyEl = document.getElementById('cc-connections-empty');
     if (connectionCardsEl && connectionsEmptyEl) {
