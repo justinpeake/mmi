@@ -482,6 +482,55 @@
   opacity: 1;
 }
 
+.cc-suggested-paused {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: #dc2626;
+  border: none;
+  border-radius: 6px;
+  cursor: default;
+  font-family: inherit;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.cc-suggested-paused:disabled {
+  opacity: 1;
+}
+
+.cc-suggested-complete {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: #6b7280;
+  border: none;
+  border-radius: 6px;
+  cursor: default;
+  font-family: inherit;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.cc-suggested-complete:disabled {
+  opacity: 1;
+}
+
+.cc-suggested-icon {
+  display: inline-flex;
+  line-height: 1;
+}
+
+.cc-suggested-icon svg {
+  display: block;
+}
+
 /* Tab counts (dynamic) */
 .cc-tab-count {
   font-weight: 600;
@@ -490,8 +539,8 @@
 
 /* Connection cards – from Figma https://www.figma.com/design/D9qRk4jvNETxDc55TaQGJc/Untitled?node-id=0-1 */
 .cc-connection-cards {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 480px));
   gap: 1.5rem;
 }
 
@@ -500,7 +549,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 1.25rem;
-  max-width: 480px;
+  min-width: 0;
 }
 
 .cc-connection-header {
@@ -534,6 +583,24 @@
 
 .cc-badge-active {
   background: #22c55e;
+  color: #fff;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.cc-badge-paused {
+  background: #dc2626;
+  color: #fff;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.cc-badge-complete {
+  background: #6b7280;
   color: #fff;
   padding: 0.25rem 0.6rem;
   font-size: 0.75rem;
@@ -599,7 +666,68 @@
   display: block;
 }
 
-.cc-btn-disconnect {
+.cc-connection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cc-btn-pause,
+.cc-btn-complete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.cc-btn-pause {
+  color: #fff;
+  background: #dc2626;
+}
+
+.cc-btn-pause:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.cc-btn-pause:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cc-btn-pause-icon,
+.cc-btn-complete-icon {
+  display: inline-flex;
+  line-height: 1;
+}
+
+.cc-btn-pause-icon svg,
+.cc-btn-complete-icon svg {
+  display: block;
+}
+
+.cc-btn-complete {
+  color: #fff;
+  background: #6b7280;
+}
+
+.cc-btn-complete:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+.cc-btn-complete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cc-btn-resume {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -608,7 +736,7 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: #fff;
-  background: #dc2626;
+  background: #22c55e;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -616,13 +744,25 @@
   transition: background 0.2s;
 }
 
-.cc-btn-disconnect:hover {
-  background: #b91c1c;
+.cc-btn-resume:hover {
+  background: #16a34a;
 }
 
-.cc-btn-disconnect-icon {
-  font-size: 1.1rem;
+.cc-btn-resume-icon {
+  display: inline-flex;
   line-height: 1;
+}
+
+.cc-btn-resume-icon svg {
+  display: block;
+}
+
+.cc-btn-complete .cc-btn-complete-icon svg {
+  stroke: #22c55e;
+}
+
+.cc-suggested-complete .cc-suggested-icon svg {
+  stroke: #22c55e;
 }
 
 .cc-connections-empty {

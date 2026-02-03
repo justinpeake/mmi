@@ -92,9 +92,9 @@
     var ccPanels = document.querySelectorAll('.cc-panel');
     var ccCounts = { clients: 3, helpers: 4, connections: 1 };
 
-    /** Single source of truth for connections. { clientName, helperName } */
+    /** Single source of truth for connections. { clientName, helperName, status: 'active'|'paused'|'complete' } */
     var connectionsList = [
-      { clientName: 'Margaret Thompson', helperName: 'Sarah Martinez' }
+      { clientName: 'Margaret Thompson', helperName: 'Sarah Martinez', status: 'active' }
     ];
 
     function updateCcCounts() {
@@ -297,11 +297,17 @@
       return list;
     }
 
-    function isConnected(clientName, helperName) {
+    function getConnectionStatus(clientName, helperName) {
       for (var i = 0; i < connectionsList.length; i++) {
-        if (connectionsList[i].clientName === clientName && connectionsList[i].helperName === helperName) return true;
+        if (connectionsList[i].clientName === clientName && connectionsList[i].helperName === helperName) {
+          return connectionsList[i].status || 'active';
+        }
       }
-      return false;
+      return null;
+    }
+
+    function isConnected(clientName, helperName) {
+      return getConnectionStatus(clientName, helperName) !== null;
     }
 
     function getSuggestedHelpersForClient(clientTags, allHelpers) {
@@ -329,12 +335,32 @@
         var since = (h.since || '').replace(/"/g, '&quot;');
         var bio = (h.bio || '').replace(/"/g, '&quot;');
         var needsAttr = needsStr.replace(/"/g, '&quot;');
-        var connected = isConnected(clientName, h.name);
-        var btnClass = connected ? 'cc-suggested-connected' : 'cc-suggested-connect';
-        var btnText = connected ? 'Connected' : 'Connect';
+        var status = getConnectionStatus(clientName, h.name);
+        var btnClass = 'cc-suggested-connect';
+        var btnText = 'Connect';
+        var disabled = '';
+        if (status === 'active') {
+          btnClass = 'cc-suggested-connected';
+          btnText = 'Connected';
+          disabled = ' disabled';
+        } else if (status === 'paused') {
+          btnClass = 'cc-suggested-paused';
+          btnText = 'Paused';
+          disabled = ' disabled';
+        } else if (status === 'complete') {
+          btnClass = 'cc-suggested-complete';
+          btnText = 'Complete';
+          disabled = ' disabled';
+        }
         html += '<div class="cc-suggested-card" role="button" tabindex="0" data-helper-name="' + name + '" data-helper-since="' + since + '" data-helper-bio="' + bio + '" data-helper-needs="' + needsAttr + '">';
         html += '<span class="cc-suggested-card-name">' + (h.name || '') + '</span>';
-        html += '<button type="button" class="' + btnClass + '"' + (connected ? ' disabled' : '') + '>' + btnText + '</button>';
+        if (status === 'paused') {
+          html += '<button type="button" class="' + btnClass + '" disabled><span class="cc-suggested-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></span>' + btnText + '</button>';
+        } else if (status === 'complete') {
+          html += '<button type="button" class="' + btnClass + '" disabled><span class="cc-suggested-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>' + btnText + '</button>';
+        } else {
+          html += '<button type="button" class="' + btnClass + '"' + disabled + '>' + btnText + '</button>';
+        }
         html += '</div>';
       }
       return html;
@@ -381,7 +407,7 @@
           var clientName = getClientNameFromCard(clientCard);
           var helperName = (suggestedCard.getAttribute('data-helper-name') || '').trim();
           if (!clientName || !helperName) return;
-          connectionsList.push({ clientName: clientName, helperName: helperName });
+          connectionsList.push({ clientName: clientName, helperName: helperName, status: 'active' });
           renderConnectionsPanel();
           updateCcCounts();
           updateSuggestedConnectionsForAllClients();
@@ -389,7 +415,7 @@
         }
         var suggestedCard = e.target.closest('.cc-suggested-card');
         if (!suggestedCard) return;
-        if (e.target.closest('.cc-suggested-connected')) return;
+        if (e.target.closest('.cc-suggested-connected') || e.target.closest('.cc-suggested-paused') || e.target.closest('.cc-suggested-complete')) return;
         e.preventDefault();
         e.stopPropagation();
         var name = suggestedCard.getAttribute('data-helper-name') || '';
@@ -653,21 +679,31 @@
       var html = '';
       for (var i = 0; i < connectionsList.length; i++) {
         var c = connectionsList[i];
+        var status = c.status || 'active';
         var clientEsc = (c.clientName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
         var helperEsc = (c.helperName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-        html += '<article class="cc-connection-card" data-client-name="' + clientEsc + '" data-helper-name="' + helperEsc + '">';
+        var badgeClass = status === 'complete' ? 'cc-badge-complete' : status === 'paused' ? 'cc-badge-paused' : 'cc-badge-active';
+        var badgeText = status === 'complete' ? 'Complete' : status === 'paused' ? 'Paused' : 'Active';
+        html += '<article class="cc-connection-card" data-client-name="' + clientEsc + '" data-helper-name="' + helperEsc + '" data-connection-status="' + status + '">';
         html += '<div class="cc-connection-header">';
         html += '<div class="cc-connection-title-row">';
         html += '<span class="cc-connection-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>';
         html += '<span class="cc-connection-label">Connection</span></div>';
-        html += '<span class="cc-badge cc-badge-active">Active</span></div>';
+        html += '<span class="cc-badge ' + badgeClass + '">' + badgeText + '</span></div>';
         html += '<p class="cc-connection-date"><span class="cc-connection-date-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Connected ' + dateStr + '</p>';
         html += '<div class="cc-connection-parties">';
         html += '<div class="cc-connection-field"><label class="cc-connection-field-label">Client</label><div class="cc-connection-field-value">' + (c.clientName || '') + '</div></div>';
         html += '<span class="cc-connection-link-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>';
         html += '<div class="cc-connection-field"><label class="cc-connection-field-label">Helper</label><div class="cc-connection-field-value">' + (c.helperName || '') + '</div></div>';
         html += '</div>';
-        html += '<button type="button" class="cc-btn-disconnect" aria-label="Disconnect"><span class="cc-btn-disconnect-icon" aria-hidden="true">×</span> Disconnect</button>';
+        html += '<div class="cc-connection-actions">';
+        if (status === 'paused') {
+          html += '<button type="button" class="cc-btn-resume" aria-label="Resume"><span class="cc-btn-resume-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span> Resume</button>';
+        } else {
+          html += '<button type="button" class="cc-btn-pause" aria-label="Pause"' + (status !== 'active' ? ' disabled' : '') + '><span class="cc-btn-pause-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></span> Pause</button>';
+        }
+        html += '<button type="button" class="cc-btn-complete" aria-label="Complete"' + (status === 'complete' ? ' disabled' : '') + '><span class="cc-btn-complete-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Complete</button>';
+        html += '</div>';
         html += '</article>';
       }
       connectionCardsEl.innerHTML = html;
@@ -679,20 +715,48 @@
 
     if (connectionCardsEl) {
       connectionCardsEl.addEventListener('click', function (e) {
-        var btn = e.target.closest('.cc-btn-disconnect');
-        if (!btn) return;
-        var card = btn.closest('.cc-connection-card');
+        var card = e.target.closest('.cc-connection-card');
         if (!card) return;
         var clientName = (card.getAttribute('data-client-name') || '').trim();
         var helperName = (card.getAttribute('data-helper-name') || '').trim();
-        for (var i = connectionsList.length - 1; i >= 0; i--) {
-          if (connectionsList[i].clientName === clientName && connectionsList[i].helperName === helperName) {
-            connectionsList.splice(i, 1);
-            break;
+        var pauseBtn = e.target.closest('.cc-btn-pause');
+        var resumeBtn = e.target.closest('.cc-btn-resume');
+        var completeBtn = e.target.closest('.cc-btn-complete');
+        if (pauseBtn && !pauseBtn.disabled) {
+          e.preventDefault();
+          for (var i = 0; i < connectionsList.length; i++) {
+            if (connectionsList[i].clientName === clientName && connectionsList[i].helperName === helperName) {
+              connectionsList[i].status = 'paused';
+              break;
+            }
           }
+          renderConnectionsPanel();
+          updateSuggestedConnectionsForAllClients();
+          return;
         }
-        renderConnectionsPanel();
-        updateSuggestedConnectionsForAllClients();
+        if (resumeBtn) {
+          e.preventDefault();
+          for (var i = 0; i < connectionsList.length; i++) {
+            if (connectionsList[i].clientName === clientName && connectionsList[i].helperName === helperName) {
+              connectionsList[i].status = 'active';
+              break;
+            }
+          }
+          renderConnectionsPanel();
+          updateSuggestedConnectionsForAllClients();
+          return;
+        }
+        if (completeBtn && !completeBtn.disabled) {
+          e.preventDefault();
+          for (var i = 0; i < connectionsList.length; i++) {
+            if (connectionsList[i].clientName === clientName && connectionsList[i].helperName === helperName) {
+              connectionsList[i].status = 'complete';
+              break;
+            }
+          }
+          renderConnectionsPanel();
+          updateSuggestedConnectionsForAllClients();
+        }
       });
     }
 
