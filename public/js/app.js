@@ -83,6 +83,102 @@
 
     updateCcCounts();
 
+    var modalAddClient = document.getElementById('cc-modal-add-client');
+    var overlayAddClient = document.getElementById('cc-modal-add-client-overlay');
+    var btnAddClient = document.getElementById('cc-btn-add-client');
+    var btnCancelAddClient = document.getElementById('cc-modal-add-client-cancel');
+    var formAddClient = document.getElementById('cc-form-add-client');
+    var clientsCardsContainer = document.querySelector('#cc-panel-clients .cc-cards');
+
+    function openAddClientModal() {
+      if (modalAddClient) modalAddClient.hidden = false;
+    }
+
+    function closeAddClientModal() {
+      if (modalAddClient) modalAddClient.hidden = true;
+      if (formAddClient) formAddClient.reset();
+    }
+
+    if (btnAddClient) btnAddClient.addEventListener('click', openAddClientModal);
+    if (overlayAddClient) overlayAddClient.addEventListener('click', closeAddClientModal);
+    if (btnCancelAddClient) btnCancelAddClient.addEventListener('click', closeAddClientModal);
+
+    if (formAddClient && clientsCardsContainer) {
+      formAddClient.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var nameInput = document.getElementById('cc-add-client-name');
+        var ageInput = document.getElementById('cc-add-client-age');
+        var bioInput = document.getElementById('cc-add-client-bio');
+        var needsInput = document.getElementById('cc-add-client-needs');
+        var name = (nameInput && nameInput.value.trim()) || '';
+        if (!name) return;
+        var age = (ageInput && ageInput.value.trim()) || '';
+        var bio = (bioInput && bioInput.value.trim()) || '';
+        var needsText = (needsInput && needsInput.value.trim()) || '';
+        var needsList = needsText ? needsText.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+
+        var avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&size=112&background=e9d5ff&color=6d28d9';
+
+        var article = document.createElement('article');
+        article.className = 'cc-client-card';
+
+        var header = document.createElement('div');
+        header.className = 'cc-client-header';
+        var img = document.createElement('img');
+        img.className = 'cc-client-avatar';
+        img.src = avatarUrl;
+        img.alt = '';
+        header.appendChild(img);
+
+        var info = document.createElement('div');
+        info.className = 'cc-client-info';
+        var nameRow = document.createElement('div');
+        nameRow.className = 'cc-client-name-row';
+        var h2 = document.createElement('h2');
+        h2.className = 'cc-client-name';
+        h2.textContent = name;
+        nameRow.appendChild(h2);
+        info.appendChild(nameRow);
+        var ageP = document.createElement('p');
+        ageP.className = 'cc-client-age';
+        ageP.textContent = age || '';
+        info.appendChild(ageP);
+        header.appendChild(info);
+        article.appendChild(header);
+
+        var bioP = document.createElement('p');
+        bioP.className = 'cc-client-bio';
+        bioP.textContent = bio || '';
+        article.appendChild(bioP);
+
+        var needsLabel = document.createElement('p');
+        needsLabel.className = 'cc-needs-label';
+        needsLabel.textContent = 'Needs help with:';
+        article.appendChild(needsLabel);
+
+        var tagsDiv = document.createElement('div');
+        tagsDiv.className = 'cc-tags';
+        needsList.forEach(function (tag) {
+          var span = document.createElement('span');
+          span.className = 'cc-tag';
+          span.textContent = tag;
+          tagsDiv.appendChild(span);
+        });
+        article.appendChild(tagsDiv);
+
+        var connectBtn = document.createElement('button');
+        connectBtn.type = 'button';
+        connectBtn.className = 'cc-btn-connect';
+        connectBtn.textContent = 'Connect Helper';
+        article.appendChild(connectBtn);
+
+        clientsCardsContainer.appendChild(article);
+        ccCounts.clients += 1;
+        updateCcCounts();
+        closeAddClientModal();
+      });
+    }
+
     var connectionCardsEl = document.getElementById('cc-connection-cards');
     var connectionsEmptyEl = document.getElementById('cc-connections-empty');
     if (connectionCardsEl && connectionsEmptyEl) {

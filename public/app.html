@@ -55,8 +55,13 @@
             </header>
             <main class="cc-main">
               <div id="cc-panel-clients" class="cc-panel" data-cc-panel="clients">
-                <h1 class="cc-section-title">Clients Seeking Help</h1>
-                <p class="cc-section-subtitle">Connect clients with community members who can assist them</p>
+                <div class="cc-section-header">
+                  <div>
+                    <h1 class="cc-section-title">Clients Seeking Help</h1>
+                    <p class="cc-section-subtitle">Connect clients with community members who can assist them</p>
+                  </div>
+                  <button type="button" class="cc-btn-add-client" id="cc-btn-add-client">Add client</button>
+                </div>
                 <div class="cc-cards">
                 <article class="cc-client-card">
                   <div class="cc-client-header">
@@ -232,6 +237,34 @@
         </div>
       </div>
     </main>
+  </div>
+  <div id="cc-modal-add-client" class="cc-modal" role="dialog" aria-labelledby="cc-modal-add-client-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" id="cc-modal-add-client-overlay"></div>
+    <div class="cc-modal-card">
+      <h2 id="cc-modal-add-client-title" class="cc-modal-title">Add client</h2>
+      <form id="cc-form-add-client" class="cc-modal-form">
+        <div class="cc-form-group">
+          <label for="cc-add-client-name">Name</label>
+          <input type="text" id="cc-add-client-name" name="name" required placeholder="Full name">
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-client-age">Age</label>
+          <input type="text" id="cc-add-client-age" name="age" placeholder="e.g. 78 years old">
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-client-bio">Bio</label>
+          <textarea id="cc-add-client-bio" name="bio" rows="3" placeholder="Short description of what help they need"></textarea>
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-client-needs">Needs help with</label>
+          <input type="text" id="cc-add-client-needs" name="needs" placeholder="Comma-separated, e.g. Grocery Shopping, Transportation">
+        </div>
+        <div class="cc-modal-actions">
+          <button type="button" class="cc-btn-cancel" id="cc-modal-add-client-cancel">Cancel</button>
+          <button type="submit" class="cc-btn-submit">Add client</button>
+        </div>
+      </form>
+    </div>
   </div>
   <script src="/js/app.js"></script>
 </body>
