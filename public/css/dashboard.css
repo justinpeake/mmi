@@ -1,0 +1,450 @@
+/**
+ * Community Connect dashboard – from Figma
+ * https://www.figma.com/design/VywQr6kXMi3hPy2Gg76Ntx/Untitled?node-id=0-1
+ */
+.cc-dashboard {
+  min-height: 100vh;
+  background: #fff;
+  color: #1a1a1a;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Header */
+.cc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.cc-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.cc-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cc-logo-icon {
+  width: 28px;
+  height: 28px;
+  background: #7c3aed;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.cc-logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+}
+
+.cc-tagline {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-left: 36px;
+}
+
+.cc-nav-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.cc-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-decoration: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  border-radius: 4px 4px 0 0;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.cc-tab:hover {
+  color: #374151;
+}
+
+.cc-tab.active {
+  color: #7c3aed;
+  border-bottom-color: #7c3aed;
+}
+
+.cc-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  transition: color 0.2s;
+}
+
+.cc-logout:hover {
+  color: #1a1a1a;
+}
+
+.cc-logout-icon {
+  font-size: 0.85rem;
+}
+
+/* Main content */
+.cc-main {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.cc-section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.02em;
+}
+
+.cc-section-subtitle {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin: 0 0 1.75rem;
+}
+
+.cc-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .cc-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cc-helper-cards {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 1100px) {
+  .cc-helper-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .cc-helper-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cc-client-card,
+.cc-helper-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cc-client-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.cc-client-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.cc-client-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cc-client-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.2rem;
+}
+
+.cc-client-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.cc-client-age {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0 0 0.5rem;
+}
+
+.cc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.cc-badge-connected {
+  background: #22c55e;
+  color: #fff;
+}
+
+.cc-client-bio {
+  font-size: 0.9rem;
+  color: #4b5563;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.cc-needs-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.4rem;
+}
+
+.cc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+}
+
+.cc-tag {
+  display: inline-block;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 999px;
+}
+
+.cc-btn-connect {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  background: #7c3aed;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: auto;
+  transition: background 0.2s;
+}
+
+.cc-btn-connect:hover {
+  background: #6d28d9;
+}
+
+/* Tab counts (dynamic) */
+.cc-tab-count {
+  font-weight: 600;
+  color: inherit;
+}
+
+/* Connection cards – from Figma https://www.figma.com/design/D9qRk4jvNETxDc55TaQGJc/Untitled?node-id=0-1 */
+.cc-connection-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cc-connection-card {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+  max-width: 480px;
+}
+
+.cc-connection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.cc-connection-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cc-connection-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cc-connection-icon svg {
+  display: block;
+}
+
+.cc-connection-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.cc-badge-active {
+  background: #22c55e;
+  color: #fff;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.cc-connection-date {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.cc-connection-date-icon {
+  display: inline-flex;
+}
+
+.cc-connection-date-icon svg {
+  display: block;
+}
+
+.cc-connection-parties {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.cc-connection-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.cc-connection-field-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.cc-connection-field-value {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.cc-connection-link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cc-connection-link-icon svg {
+  display: block;
+}
+
+.cc-btn-disconnect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  background: #dc2626;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+
+.cc-btn-disconnect:hover {
+  background: #b91c1c;
+}
+
+.cc-btn-disconnect-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.cc-connections-empty {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* Dashboard full-bleed: hide sidebar/header when showing dashboard */
+body.view-dashboard .app-sidebar,
+body.view-dashboard .app-header {
+  display: none;
+}
+
+body.view-dashboard .app-main {
+  flex: 1;
+}
+
+body.view-dashboard .app-content {
+  padding: 0;
+  max-width: none;
+}
+
+body.view-dashboard .cc-dashboard {
+  display: block;
+}

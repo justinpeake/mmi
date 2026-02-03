@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Connect — Sign In</title>
+  <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <h1 class="login-title">Community Connect</h1>
+      <p class="login-tagline">Connecting clients with community helpers</p>
+      <form id="login-form" class="login-form" action="#" method="post">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-signin">Sign In</button>
+      </form>
+      <p class="login-signup">
+        Don't have an account? <a href="#">Sign Up</a>
+      </p>
+      <div id="message" class="message" role="alert"></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var AUTH_KEY = 'mmi-auth';
+      var form = document.getElementById('login-form');
+      var messageEl = document.getElementById('message');
+      function showMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = 'message ' + type;
+      }
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        messageEl.className = 'message';
+        messageEl.textContent = '';
+        try { sessionStorage.setItem(AUTH_KEY, '1'); } catch (err) { showMessage('Could not save session.', 'error'); return; }
+        window.location.replace('/app.html#dashboard');
+      });
+    })();
+  </script>
+</body>
+</html>

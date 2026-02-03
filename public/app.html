@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MMI — App</title>
+  <link rel="stylesheet" href="/css/design-tokens.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="app-sidebar">
+      <div class="app-sidebar-header">MMI</div>
+      <nav class="app-nav">
+        <a href="/app.html" class="active" data-page="home">Home</a>
+        <a href="/app.html#dashboard" data-page="dashboard">Dashboard</a>
+        <a href="/app.html#settings" data-page="settings">Settings</a>
+      </nav>
+    </aside>
+    <main class="app-main">
+      <header class="app-header">
+        <span id="header-title">Home</span>
+        <div>
+          <button type="button" class="btn btn-ghost" id="btn-logout">Sign out</button>
+        </div>
+      </header>
+      <div class="app-content">
+        <div id="page-home" class="page">
+          <h1 class="page-title">Home</h1>
+          <p class="page-subtitle">Welcome to MMI. Build screens from Figma using user-Figma MCP.</p>
+          <div class="card">
+            <p style="margin:0; color: var(--mmi-text-secondary);">
+              Design file: <a href="https://www.figma.com/make/3lxU3TJjw61ENJyjDuKL1k/MMI" target="_blank" rel="noopener" style="color: var(--mmi-accent);">MMI on Figma</a>.
+              Use <strong>get_design_context</strong> with node IDs to replace this placeholder with code from Figma.
+            </p>
+          </div>
+        </div>
+        <div id="page-dashboard" class="page" hidden>
+          <div class="cc-dashboard">
+            <header class="cc-header">
+              <div class="cc-brand">
+                <div class="cc-logo-row">
+                  <div class="cc-logo-icon" aria-hidden="true">♥</div>
+                  <span class="cc-logo-text">Community Connect</span>
+                </div>
+                <p class="cc-tagline">Building stronger communities together</p>
+              </div>
+              <nav class="cc-nav-tabs" aria-label="Main">
+                <a href="#" class="cc-tab active" data-cc-tab="clients">Clients <span id="cc-count-clients" class="cc-tab-count">3</span></a>
+                <a href="#" class="cc-tab" data-cc-tab="helpers">Community Helpers <span id="cc-count-helpers" class="cc-tab-count">4</span></a>
+                <a href="#" class="cc-tab" data-cc-tab="connections">Connections <span id="cc-count-connections" class="cc-tab-count">1</span></a>
+              </nav>
+              <button type="button" class="cc-logout" id="cc-logout" aria-label="Logout">Logout <span class="cc-logout-icon" aria-hidden="true">→</span></button>
+            </header>
+            <main class="cc-main">
+              <div id="cc-panel-clients" class="cc-panel" data-cc-panel="clients">
+                <h1 class="cc-section-title">Clients Seeking Help</h1>
+                <p class="cc-section-subtitle">Connect clients with community members who can assist them</p>
+                <div class="cc-cards">
+                <article class="cc-client-card">
+                  <div class="cc-client-header">
+                    <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=Margaret+Thompson&size=112&background=e9d5ff&color=6d28d9" alt="">
+                    <div class="cc-client-info">
+                      <div class="cc-client-name-row">
+                        <h2 class="cc-client-name">Margaret Thompson</h2>
+                        <span class="cc-badge cc-badge-connected">Connected</span>
+                      </div>
+                      <p class="cc-client-age">78 years old</p>
+                    </div>
+                  </div>
+                  <p class="cc-client-bio">Looking for help with weekly grocery shopping and occasional rides to medical appointments.</p>
+                  <p class="cc-needs-label">Needs help with:</p>
+                  <div class="cc-tags">
+                    <span class="cc-tag">Grocery Shopping</span>
+                    <span class="cc-tag">Transportation</span>
+                    <span class="cc-tag">Companionship</span>
+                  </div>
+                  <button type="button" class="cc-btn-connect">Connect Helper</button>
+                </article>
+                <article class="cc-client-card">
+                  <div class="cc-client-header">
+                    <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=Robert+Chen&size=112&background=e9d5ff&color=6d28d9" alt="">
+                    <div class="cc-client-info">
+                      <h2 class="cc-client-name">Robert Chen</h2>
+                      <p class="cc-client-age">82 years old</p>
+                    </div>
+                  </div>
+                  <p class="cc-client-bio">Needs assistance with smartphone and computer. Would also appreciate help with meal prep.</p>
+                  <p class="cc-needs-label">Needs help with:</p>
+                  <div class="cc-tags">
+                    <span class="cc-tag">Tech Support</span>
+                    <span class="cc-tag">Meal Preparation</span>
+                  </div>
+                  <button type="button" class="cc-btn-connect">Connect Helper</button>
+                </article>
+                <article class="cc-client-card">
+                  <div class="cc-client-header">
+                    <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=Patricia+Davis&size=112&background=e9d5ff&color=6d28d9" alt="">
+                    <div class="cc-client-info">
+                      <h2 class="cc-client-name">Patricia Davis</h2>
+                      <p class="cc-client-age">71 years old</p>
+                    </div>
+                  </div>
+                  <p class="cc-client-bio">Seeking help maintaining her garden and assistance with light household tasks.</p>
+                  <p class="cc-needs-label">Needs help with:</p>
+                  <div class="cc-tags">
+                    <span class="cc-tag">Gardening</span>
+                    <span class="cc-tag">Light Housework</span>
+                  </div>
+                  <button type="button" class="cc-btn-connect">Connect Helper</button>
+                </article>
+              </div>
+              </div>
+              <div id="cc-panel-helpers" class="cc-panel" data-cc-panel="helpers" hidden>
+                <h1 class="cc-section-title">Community Helpers</h1>
+                <p class="cc-section-subtitle">Community members who can assist clients</p>
+                <div class="cc-cards cc-helper-cards">
+                  <article class="cc-helper-card">
+                    <div class="cc-client-header">
+                      <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=Sarah+Miller&size=112&background=e9d5ff&color=6d28d9" alt="">
+                      <div class="cc-client-info">
+                        <h2 class="cc-client-name">Sarah Miller</h2>
+                        <p class="cc-client-age">Volunteer since 2023</p>
+                      </div>
+                    </div>
+                    <p class="cc-client-bio">Available for grocery runs, pharmacy pickups, and friendly check-ins.</p>
+                    <p class="cc-needs-label">Can help with:</p>
+                    <div class="cc-tags">
+                      <span class="cc-tag">Grocery Shopping</span>
+                      <span class="cc-tag">Transportation</span>
+                      <span class="cc-tag">Companionship</span>
+                    </div>
+                    <button type="button" class="cc-btn-connect">Connect</button>
+                  </article>
+                  <article class="cc-helper-card">
+                    <div class="cc-client-header">
+                      <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=James+Wilson&size=112&background=e9d5ff&color=6d28d9" alt="">
+                      <div class="cc-client-info">
+                        <h2 class="cc-client-name">James Wilson</h2>
+                        <p class="cc-client-age">Volunteer since 2022</p>
+                      </div>
+                    </div>
+                    <p class="cc-client-bio">IT support and device setup. Happy to help with meal prep and errands.</p>
+                    <p class="cc-needs-label">Can help with:</p>
+                    <div class="cc-tags">
+                      <span class="cc-tag">Tech Support</span>
+                      <span class="cc-tag">Meal Preparation</span>
+                      <span class="cc-tag">Errands</span>
+                    </div>
+                    <button type="button" class="cc-btn-connect">Connect</button>
+                  </article>
+                  <article class="cc-helper-card">
+                    <div class="cc-client-header">
+                      <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=Maria+Garcia&size=112&background=e9d5ff&color=6d28d9" alt="">
+                      <div class="cc-client-info">
+                        <h2 class="cc-client-name">Maria Garcia</h2>
+                        <p class="cc-client-age">Volunteer since 2024</p>
+                      </div>
+                    </div>
+                    <p class="cc-client-bio">Gardening, light housework, and companionship. Flexible schedule.</p>
+                    <p class="cc-needs-label">Can help with:</p>
+                    <div class="cc-tags">
+                      <span class="cc-tag">Gardening</span>
+                      <span class="cc-tag">Light Housework</span>
+                      <span class="cc-tag">Companionship</span>
+                    </div>
+                    <button type="button" class="cc-btn-connect">Connect</button>
+                  </article>
+                  <article class="cc-helper-card">
+                    <div class="cc-client-header">
+                      <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=David+Lee&size=112&background=e9d5ff&color=6d28d9" alt="">
+                      <div class="cc-client-info">
+                        <h2 class="cc-client-name">David Lee</h2>
+                        <p class="cc-client-age">Volunteer since 2023</p>
+                      </div>
+                    </div>
+                    <p class="cc-client-bio">Transportation to appointments, tech help, and occasional handyman tasks.</p>
+                    <p class="cc-needs-label">Can help with:</p>
+                    <div class="cc-tags">
+                      <span class="cc-tag">Transportation</span>
+                      <span class="cc-tag">Tech Support</span>
+                      <span class="cc-tag">Handyman</span>
+                    </div>
+                    <button type="button" class="cc-btn-connect">Connect</button>
+                  </article>
+                </div>
+              </div>
+              <div id="cc-panel-connections" class="cc-panel" data-cc-panel="connections" hidden>
+                <h1 class="cc-section-title">Active Connections</h1>
+                <p class="cc-section-subtitle">Manage existing client-helper relationships.</p>
+                <div class="cc-connection-cards" id="cc-connection-cards">
+                  <article class="cc-connection-card" data-connection-id="1">
+                    <div class="cc-connection-header">
+                      <div class="cc-connection-title-row">
+                        <span class="cc-connection-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+                        <span class="cc-connection-label">Connection</span>
+                      </div>
+                      <span class="cc-badge cc-badge-active">Active</span>
+                    </div>
+                    <p class="cc-connection-date">
+                      <span class="cc-connection-date-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+                      Connected 2026-01-15
+                    </p>
+                    <div class="cc-connection-parties">
+                      <div class="cc-connection-field">
+                        <label class="cc-connection-field-label">Client</label>
+                        <div class="cc-connection-field-value">Margaret Thompson</div>
+                      </div>
+                      <span class="cc-connection-link-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+                      <div class="cc-connection-field">
+                        <label class="cc-connection-field-label">Helper</label>
+                        <div class="cc-connection-field-value">Sarah Martinez</div>
+                      </div>
+                    </div>
+                    <button type="button" class="cc-btn-disconnect" aria-label="Disconnect">
+                      <span class="cc-btn-disconnect-icon" aria-hidden="true">×</span> Disconnect
+                    </button>
+                  </article>
+                </div>
+                <p class="cc-connections-empty" id="cc-connections-empty" hidden>No connections yet. Connect clients with helpers from the Clients or Community Helpers tabs.</p>
+              </div>
+            </main>
+          </div>
+        </div>
+        <div id="page-settings" class="page" hidden>
+          <h1 class="page-title">Settings</h1>
+          <p class="page-subtitle">Placeholder — replace with Figma design.</p>
+          <div class="card">
+            <p style="margin:0; color: var(--mmi-text-secondary);">Settings content from Figma (node ID).</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="/js/app.js"></script>
+</body>
+</html>
