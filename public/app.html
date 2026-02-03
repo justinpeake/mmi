@@ -241,6 +241,40 @@
               <div id="cc-panel-connections" class="cc-panel" data-cc-panel="connections" hidden>
                 <h1 class="cc-section-title">Active Connections</h1>
                 <p class="cc-section-subtitle">Manage existing client-helper relationships.</p>
+                <div class="cc-connections-filters">
+                  <div class="cc-connections-filter">
+                    <label for="cc-connections-filter-client-select" class="cc-connections-filter-label">Client:</label>
+                    <select id="cc-connections-filter-client-select" class="cc-connections-select" aria-label="Filter by client">
+                      <option value="">All clients</option>
+                    </select>
+                  </div>
+                  <div class="cc-connections-filter">
+                    <label for="cc-connections-filter-helper-select" class="cc-connections-filter-label">Helper:</label>
+                    <select id="cc-connections-filter-helper-select" class="cc-connections-select" aria-label="Filter by helper">
+                      <option value="">All helpers</option>
+                    </select>
+                  </div>
+                  <div class="cc-connections-filter">
+                    <span class="cc-connections-filter-label">Status:</span>
+                    <div class="cc-connections-filter-options" role="group" aria-label="Filter by status">
+                      <button type="button" class="cc-connections-filter-btn active" id="cc-connections-filter-status-all" data-status="all">All</button>
+                      <button type="button" class="cc-connections-filter-btn" id="cc-connections-filter-status-active" data-status="active">Active</button>
+                      <button type="button" class="cc-connections-filter-btn" id="cc-connections-filter-status-paused" data-status="paused">Paused</button>
+                      <button type="button" class="cc-connections-filter-btn" id="cc-connections-filter-status-complete" data-status="complete">Complete</button>
+                    </div>
+                  </div>
+                  <div class="cc-connections-filter">
+                    <span class="cc-connections-filter-label">Duration:</span>
+                    <div class="cc-connections-filter-options" role="group" aria-label="Sort by duration">
+                      <button type="button" class="cc-connections-filter-btn active" id="cc-connections-duration-newest" data-duration="newest">Newest first</button>
+                      <button type="button" class="cc-connections-filter-btn" id="cc-connections-duration-oldest" data-duration="oldest">Oldest first</button>
+                    </div>
+                  </div>
+                  <div class="cc-connections-filter cc-connections-search-wrap">
+                    <label for="cc-connections-search" class="cc-connections-filter-label">Search:</label>
+                    <input type="text" id="cc-connections-search" class="cc-connections-search" placeholder="Client or helper name..." aria-label="Search connections by client or helper name">
+                  </div>
+                </div>
                 <div class="cc-connection-cards" id="cc-connection-cards">
                   <article class="cc-connection-card" data-connection-id="1">
                     <div class="cc-connection-header">
@@ -408,6 +442,16 @@
       <div class="cc-modal-actions cc-modal-actions-detail" id="cc-helper-detail-actions">
         <button type="button" class="cc-btn-remove" id="cc-helper-detail-remove">Remove</button>
         <button type="button" class="cc-btn-cancel" id="cc-modal-helper-detail-close">Close</button>
+      </div>
+    </div>
+  </div>
+  <div id="cc-modal-connection-detail" class="cc-modal" role="dialog" aria-labelledby="cc-modal-connection-detail-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" id="cc-connection-detail-overlay"></div>
+    <div class="cc-modal-card cc-connection-detail-card">
+      <h2 id="cc-modal-connection-detail-title" class="cc-modal-title">Connection</h2>
+      <div id="cc-connection-detail-content" class="cc-connection-detail-content"></div>
+      <div class="cc-modal-actions">
+        <button type="button" class="cc-btn-cancel" id="cc-connection-detail-close">Close</button>
       </div>
     </div>
   </div>
