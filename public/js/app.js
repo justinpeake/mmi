@@ -51,6 +51,43 @@
     var ccLogout = document.getElementById('cc-logout');
     if (ccLogout) ccLogout.addEventListener('click', logout);
 
+    var btnSettings = document.getElementById('cc-btn-settings');
+    var settingsDropdown = document.getElementById('cc-settings-dropdown');
+    if (btnSettings && settingsDropdown) {
+      btnSettings.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var isOpen = !settingsDropdown.hidden;
+        settingsDropdown.hidden = isOpen;
+        btnSettings.setAttribute('aria-expanded', !isOpen);
+      });
+      document.addEventListener('click', function () {
+        settingsDropdown.hidden = true;
+        btnSettings.setAttribute('aria-expanded', 'false');
+      });
+      settingsDropdown.addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
+      document.querySelectorAll('.cc-settings-item').forEach(function (item) {
+        item.addEventListener('click', function (e) {
+          e.preventDefault();
+          var action = item.getAttribute('data-cc-settings');
+          settingsDropdown.hidden = true;
+          btnSettings.setAttribute('aria-expanded', 'false');
+          var modalId = action === 'settings' ? 'cc-modal-settings' : action === 'admin' ? 'cc-modal-admin' : 'cc-modal-profile';
+          var modal = document.getElementById(modalId);
+          if (modal) modal.hidden = false;
+        });
+      });
+    }
+
+    document.querySelectorAll('[data-cc-close]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var modalId = el.getAttribute('data-cc-close');
+        var modal = document.getElementById(modalId);
+        if (modal) modal.hidden = true;
+      });
+    });
+
     var ccTabs = document.querySelectorAll('.cc-tab');
     var ccPanels = document.querySelectorAll('.cc-panel');
     var ccCounts = { clients: 3, helpers: 4, connections: 1 };
