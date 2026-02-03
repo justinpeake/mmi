@@ -531,6 +531,87 @@
   display: block;
 }
 
+/* Current connections on helper cards */
+.cc-current-connections {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cc-current-connections-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.cc-current-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cc-current-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.cc-current-card-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cc-current-status {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: inherit;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.cc-current-connected {
+  background: #22c55e;
+}
+
+.cc-current-paused {
+  background: #dc2626;
+}
+
+.cc-current-complete {
+  background: #6b7280;
+}
+
+.cc-current-complete .cc-current-icon svg {
+  stroke: #22c55e;
+}
+
+.cc-current-icon {
+  display: inline-flex;
+  line-height: 1;
+}
+
+.cc-current-icon svg {
+  display: block;
+}
+
 /* Tab counts (dynamic) */
 .cc-tab-count {
   font-weight: 600;
@@ -808,6 +889,59 @@
   margin: 0;
   font-size: 0.95rem;
   color: #6b7280;
+}
+
+/* Connect dropdown (helper card – select client) */
+.cc-connect-dropdown {
+  position: fixed;
+  z-index: 1100;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.35rem 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.cc-connect-dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.cc-connect-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.cc-connect-dropdown-item:hover {
+  background: #f3f4f6;
+}
+
+.cc-connect-dropdown-empty {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+/* Connect confirm modal */
+.cc-connect-confirm-message {
+  margin: 0 0 1.25rem;
+  font-size: 1rem;
+  color: #374151;
 }
 
 /* Add client modal */

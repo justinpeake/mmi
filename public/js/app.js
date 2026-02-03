@@ -326,6 +326,34 @@
       return getConnectionStatus(clientName, helperName) !== null;
     }
 
+    function getConnectionsForHelper(helperName) {
+      var list = [];
+      for (var i = 0; i < connectionsList.length; i++) {
+        if (connectionsList[i].helperName === helperName) {
+          list.push({ clientName: connectionsList[i].clientName, status: connectionsList[i].status || 'active' });
+        }
+      }
+      return list;
+    }
+
+    function getAllClientNames() {
+      var cards = document.querySelectorAll('#cc-panel-clients .cc-client-card');
+      var names = [];
+      for (var i = 0; i < cards.length; i++) {
+        var name = getClientNameFromCard(cards[i]);
+        if (name) names.push(name);
+      }
+      return names;
+    }
+
+    function getAvailableClientsForHelper(helperName) {
+      var all = getAllClientNames();
+      var connected = getConnectionsForHelper(helperName);
+      var connectedSet = {};
+      for (var i = 0; i < connected.length; i++) connectedSet[connected[i].clientName] = true;
+      return all.filter(function (name) { return !connectedSet[name]; });
+    }
+
     function getSuggestedHelpersForClient(clientTags, allHelpers) {
       if (clientTags.length === 0) return [];
       var withScore = [];
@@ -404,6 +432,48 @@
       }
     }
 
+    function buildCurrentConnectionsListHTML(connections) {
+      var html = '';
+      for (var i = 0; i < connections.length; i++) {
+        var conn = connections[i];
+        var clientName = (conn.clientName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+        var status = conn.status || 'active';
+        var btnClass = status === 'active' ? 'cc-current-status cc-current-connected' : status === 'paused' ? 'cc-current-status cc-current-paused' : 'cc-current-status cc-current-complete';
+        var label = status === 'active' ? 'Connected' : status === 'paused' ? 'Paused' : 'Complete';
+        html += '<div class="cc-current-card">';
+        html += '<span class="cc-current-card-name">' + (conn.clientName || '') + '</span>';
+        if (status === 'paused') {
+          html += '<span class="' + btnClass + '"><span class="cc-current-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></span>' + label + '</span>';
+        } else if (status === 'complete') {
+          html += '<span class="' + btnClass + '"><span class="cc-current-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>' + label + '</span>';
+        } else {
+          html += '<span class="' + btnClass + '">' + label + '</span>';
+        }
+        html += '</div>';
+      }
+      return html;
+    }
+
+    function getHelperNameFromCard(helperCard) {
+      var nameEl = helperCard.querySelector('.cc-client-name');
+      return nameEl ? nameEl.textContent.trim() : '';
+    }
+
+    function updateCurrentConnectionsForHelper(helperCard) {
+      var listEl = helperCard.querySelector('.cc-current-list');
+      if (!listEl) return;
+      var helperName = getHelperNameFromCard(helperCard);
+      var connections = getConnectionsForHelper(helperName);
+      listEl.innerHTML = buildCurrentConnectionsListHTML(connections);
+    }
+
+    function updateCurrentConnectionsForAllHelpers() {
+      var helperCards = document.querySelectorAll('#cc-panel-helpers .cc-helper-card');
+      for (var i = 0; i < helperCards.length; i++) {
+        updateCurrentConnectionsForHelper(helperCards[i]);
+      }
+    }
+
     if (clientsCardsContainer) {
       clientsCardsContainer.addEventListener('click', function (e) {
         if (e.target.closest('.cc-suggested-card')) return;
@@ -432,6 +502,7 @@
           renderConnectionsPanel();
           updateCcCounts();
           updateSuggestedConnectionsForAllClients();
+          updateCurrentConnectionsForAllHelpers();
           return;
         }
         var suggestedCard = e.target.closest('.cc-suggested-card');
@@ -449,6 +520,7 @@
     }
 
     updateSuggestedConnectionsForAllClients();
+    updateCurrentConnectionsForAllHelpers();
 
     var removeConfirmEl = document.getElementById('cc-remove-confirm');
     var clientDetailActionsEl = document.getElementById('cc-client-detail-actions');
@@ -568,11 +640,22 @@
         connectBtn.className = 'cc-btn-connect';
         connectBtn.textContent = 'Connect';
         article.appendChild(connectBtn);
+        var currentWrap = document.createElement('div');
+        currentWrap.className = 'cc-current-connections';
+        var currentTitle = document.createElement('p');
+        currentTitle.className = 'cc-current-connections-title';
+        currentTitle.textContent = 'Current connections';
+        currentWrap.appendChild(currentTitle);
+        var currentList = document.createElement('div');
+        currentList.className = 'cc-current-list';
+        currentWrap.appendChild(currentList);
+        article.appendChild(currentWrap);
         helpersCardsContainer.appendChild(article);
         ccCounts.helpers += 1;
         updateCcCounts();
         closeAddHelperModal();
         updateSuggestedConnectionsForAllClients();
+        updateCurrentConnectionsForAllHelpers();
       });
     }
 
@@ -666,14 +749,121 @@
       closeHelperDetailModal();
     }
 
+    var connectDropdownEl = document.getElementById('cc-connect-dropdown');
+    var connectDropdownListEl = document.getElementById('cc-connect-dropdown-list');
+    var connectDropdownEmptyEl = document.getElementById('cc-connect-dropdown-empty');
+    var modalConnectConfirm = document.getElementById('cc-modal-connect-confirm');
+    var connectConfirmMessage = document.getElementById('cc-connect-confirm-message');
+    var connectConfirmCancel = document.getElementById('cc-connect-confirm-cancel');
+    var connectConfirmYes = document.getElementById('cc-connect-confirm-yes');
+    var connectConfirmOverlay = document.getElementById('cc-connect-confirm-overlay');
+    var pendingConnection = null;
+
+    function closeConnectDropdown() {
+      if (connectDropdownEl) connectDropdownEl.hidden = true;
+    }
+
+    function openConnectDropdown(buttonEl, helperName) {
+      var available = getAvailableClientsForHelper(helperName);
+      if (connectDropdownEl) connectDropdownEl.setAttribute('data-helper-name', helperName);
+      if (connectDropdownListEl) {
+        connectDropdownListEl.innerHTML = '';
+        if (available.length === 0) {
+          if (connectDropdownEmptyEl) connectDropdownEmptyEl.hidden = false;
+        } else {
+          if (connectDropdownEmptyEl) connectDropdownEmptyEl.hidden = true;
+          for (var i = 0; i < available.length; i++) {
+            var name = available[i];
+            var item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'cc-connect-dropdown-item';
+            item.textContent = name;
+            item.setAttribute('data-client-name', name);
+            item.setAttribute('role', 'option');
+            connectDropdownListEl.appendChild(item);
+          }
+        }
+      }
+      var rect = buttonEl.getBoundingClientRect();
+      if (connectDropdownEl) {
+        connectDropdownEl.style.top = (rect.bottom + 4) + 'px';
+        connectDropdownEl.style.left = rect.left + 'px';
+        connectDropdownEl.style.minWidth = Math.max(rect.width, 180) + 'px';
+        connectDropdownEl.hidden = false;
+      }
+    }
+
+    function closeConnectConfirmModal() {
+      if (modalConnectConfirm) modalConnectConfirm.hidden = true;
+      pendingConnection = null;
+    }
+
+    function openConnectConfirmModal(helperName, clientName) {
+      pendingConnection = { helperName: helperName, clientName: clientName };
+      if (connectConfirmMessage) connectConfirmMessage.textContent = 'Connect ' + helperName + ' with ' + clientName + '?';
+      if (modalConnectConfirm) modalConnectConfirm.hidden = false;
+    }
+
+    function doConfirmConnection() {
+      if (!pendingConnection) return;
+      var helperName = pendingConnection.helperName;
+      var clientName = pendingConnection.clientName;
+      connectionsList.push({
+        clientName: clientName,
+        helperName: helperName,
+        status: 'active',
+        history: [{ type: 'created', date: new Date().toISOString(), by: getCurrentUserName() }]
+      });
+      renderConnectionsPanel();
+      updateCcCounts();
+      updateSuggestedConnectionsForAllClients();
+      updateCurrentConnectionsForAllHelpers();
+      closeConnectConfirmModal();
+    }
+
     if (helpersCardsContainer) {
       helpersCardsContainer.addEventListener('click', function (e) {
-        if (e.target.closest('.cc-btn-connect')) return;
+        var connectBtn = e.target.closest('.cc-btn-connect');
+        if (connectBtn) {
+          var card = connectBtn.closest('.cc-helper-card');
+          if (card) {
+            e.preventDefault();
+            e.stopPropagation();
+            var helperName = getHelperNameFromCard(card);
+            if (helperName) openConnectDropdown(connectBtn, helperName);
+            return;
+          }
+        }
         var card = e.target.closest('.cc-helper-card');
         if (!card) return;
         openHelperDetailModal(card);
       });
     }
+
+    if (connectDropdownListEl) {
+      connectDropdownListEl.addEventListener('click', function (e) {
+        var item = e.target.closest('.cc-connect-dropdown-item');
+        if (!item) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var clientName = item.getAttribute('data-client-name') || '';
+        var helperName = connectDropdownEl ? connectDropdownEl.getAttribute('data-helper-name') : '';
+        closeConnectDropdown();
+        if (clientName && helperName) openConnectConfirmModal(helperName, clientName);
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      if (connectDropdownEl && !connectDropdownEl.hidden) {
+        if (!connectDropdownEl.contains(e.target) && !e.target.closest('.cc-helper-card .cc-btn-connect')) {
+          closeConnectDropdown();
+        }
+      }
+    });
+
+    if (connectConfirmCancel) connectConfirmCancel.addEventListener('click', closeConnectConfirmModal);
+    if (connectConfirmOverlay) connectConfirmOverlay.addEventListener('click', closeConnectConfirmModal);
+    if (connectConfirmYes) connectConfirmYes.addEventListener('click', function () { doConfirmConnection(); });
 
     if (overlayHelperDetail) overlayHelperDetail.addEventListener('click', closeHelperDetailModal);
     if (btnCloseHelperDetail) btnCloseHelperDetail.addEventListener('click', closeHelperDetailModal);
@@ -787,6 +977,7 @@
           }
           renderConnectionsPanel();
           updateSuggestedConnectionsForAllClients();
+          updateCurrentConnectionsForAllHelpers();
           return;
         }
         if (resumeBtn) {
@@ -802,6 +993,7 @@
           }
           renderConnectionsPanel();
           updateSuggestedConnectionsForAllClients();
+          updateCurrentConnectionsForAllHelpers();
           return;
         }
         if (completeBtn && !completeBtn.disabled) {
@@ -817,6 +1009,7 @@
           }
           renderConnectionsPanel();
           updateSuggestedConnectionsForAllClients();
+          updateCurrentConnectionsForAllHelpers();
         }
       });
     }
