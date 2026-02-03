@@ -168,6 +168,10 @@
                       <span class="cc-tag">Companionship</span>
                     </div>
                     <button type="button" class="cc-btn-connect">Connect</button>
+                    <div class="cc-current-connections">
+                      <p class="cc-current-connections-title">Current connections</p>
+                      <div class="cc-current-list"></div>
+                    </div>
                   </article>
                   <article class="cc-helper-card">
                     <div class="cc-client-header">
@@ -185,6 +189,10 @@
                       <span class="cc-tag">Errands</span>
                     </div>
                     <button type="button" class="cc-btn-connect">Connect</button>
+                    <div class="cc-current-connections">
+                      <p class="cc-current-connections-title">Current connections</p>
+                      <div class="cc-current-list"></div>
+                    </div>
                   </article>
                   <article class="cc-helper-card">
                     <div class="cc-client-header">
@@ -202,6 +210,10 @@
                       <span class="cc-tag">Companionship</span>
                     </div>
                     <button type="button" class="cc-btn-connect">Connect</button>
+                    <div class="cc-current-connections">
+                      <p class="cc-current-connections-title">Current connections</p>
+                      <div class="cc-current-list"></div>
+                    </div>
                   </article>
                   <article class="cc-helper-card">
                     <div class="cc-client-header">
@@ -219,6 +231,10 @@
                       <span class="cc-tag">Handyman</span>
                     </div>
                     <button type="button" class="cc-btn-connect">Connect</button>
+                    <div class="cc-current-connections">
+                      <p class="cc-current-connections-title">Current connections</p>
+                      <div class="cc-current-list"></div>
+                    </div>
                   </article>
                 </div>
               </div>
@@ -394,6 +410,21 @@
         <button type="button" class="cc-btn-cancel" id="cc-modal-helper-detail-close">Close</button>
       </div>
     </div>
+  </div>
+  <div id="cc-modal-connect-confirm" class="cc-modal" role="dialog" aria-labelledby="cc-modal-connect-confirm-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" id="cc-connect-confirm-overlay"></div>
+    <div class="cc-modal-card">
+      <h2 id="cc-modal-connect-confirm-title" class="cc-modal-title">Confirm connection</h2>
+      <p id="cc-connect-confirm-message" class="cc-connect-confirm-message"></p>
+      <div class="cc-modal-actions">
+        <button type="button" class="cc-btn-cancel" id="cc-connect-confirm-cancel">Cancel</button>
+        <button type="button" class="cc-btn-submit" id="cc-connect-confirm-yes">Confirm</button>
+      </div>
+    </div>
+  </div>
+  <div id="cc-connect-dropdown" class="cc-connect-dropdown" role="listbox" aria-label="Select a client to connect" hidden>
+    <div class="cc-connect-dropdown-list" id="cc-connect-dropdown-list"></div>
+    <p class="cc-connect-dropdown-empty" id="cc-connect-dropdown-empty" hidden>No clients available to connect.</p>
   </div>
   <div id="cc-modal-settings" class="cc-modal" role="dialog" aria-labelledby="cc-modal-settings-title" aria-modal="true" hidden>
     <div class="cc-modal-overlay" data-cc-close="cc-modal-settings"></div>
