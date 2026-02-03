@@ -618,6 +618,108 @@
   color: inherit;
 }
 
+/* Connections filters */
+.cc-connections-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.cc-connections-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cc-connections-filter-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.cc-connections-filter-options {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.cc-connections-filter-btn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.cc-connections-filter-btn:hover {
+  color: #374151;
+  background: #e5e7eb;
+}
+
+.cc-connections-filter-btn.active {
+  color: #fff;
+  background: #7c3aed;
+  border-color: #7c3aed;
+}
+
+.cc-connections-select {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-family: inherit;
+  min-width: 160px;
+  cursor: pointer;
+}
+
+.cc-connections-select:focus {
+  outline: none;
+  border-color: #7c3aed;
+}
+
+.cc-connections-search-wrap {
+  flex: 1;
+  min-width: 200px;
+}
+
+.cc-connections-search {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-family: inherit;
+  width: 100%;
+  max-width: 280px;
+}
+
+.cc-connections-search::placeholder {
+  color: #9ca3af;
+}
+
+.cc-connections-search:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+/* Search keyword highlight in connection cards */
+.cc-search-highlight {
+  background: #fef08a;
+  color: #1a1a1a;
+  padding: 0.1em 0.15em;
+  border-radius: 2px;
+}
+
 /* Connection cards – from Figma https://www.figma.com/design/D9qRk4jvNETxDc55TaQGJc/Untitled?node-id=0-1 */
 .cc-connection-cards {
   display: grid;
@@ -865,6 +967,8 @@
   font-size: 0.85rem;
   color: #4b5563;
   line-height: 1.5;
+  max-height: 8.25em;
+  overflow-y: auto;
 }
 
 .cc-connection-history-item {
@@ -975,6 +1079,14 @@
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.cc-connection-detail-card .cc-connection-detail-content {
+  margin-bottom: 1.25rem;
+}
+
+.cc-connection-detail-content .cc-connection-card {
+  max-width: 100%;
 }
 
 .cc-modal-title {
