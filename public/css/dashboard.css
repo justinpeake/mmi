@@ -88,6 +88,72 @@
   border-bottom-color: #7c3aed;
 }
 
+.cc-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cc-settings-dropdown-wrap {
+  position: relative;
+}
+
+.cc-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: #6b7280;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.cc-btn-icon:hover {
+  color: #1a1a1a;
+  background: #f3f4f6;
+}
+
+.cc-btn-settings .cc-icon-gear {
+  display: block;
+}
+
+.cc-settings-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
+  min-width: 160px;
+  padding: 0.35rem 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+}
+
+.cc-settings-dropdown[hidden] {
+  display: none;
+}
+
+.cc-settings-item {
+  display: block;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  color: #374151;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cc-settings-item:hover {
+  background: #f3f4f6;
+  color: #1a1a1a;
+}
+
 .cc-logout {
   display: inline-flex;
   align-items: center;
@@ -519,6 +585,17 @@
   font-size: 1.25rem;
   font-weight: 700;
   color: #1a1a1a;
+}
+
+.cc-modal-body {
+  margin-bottom: 1.25rem;
+}
+
+.cc-modal-body p {
+  margin: 0;
+  font-size: 1rem;
+  color: #4b5563;
+  line-height: 1.5;
 }
 
 .cc-modal-form {

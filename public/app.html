@@ -51,7 +51,21 @@
                 <a href="#" class="cc-tab" data-cc-tab="helpers">Community Helpers <span id="cc-count-helpers" class="cc-tab-count">4</span></a>
                 <a href="#" class="cc-tab" data-cc-tab="connections">Connections <span id="cc-count-connections" class="cc-tab-count">1</span></a>
               </nav>
-              <button type="button" class="cc-logout" id="cc-logout" aria-label="Logout">Logout <span class="cc-logout-icon" aria-hidden="true">→</span></button>
+              <div class="cc-header-actions">
+                <div class="cc-settings-dropdown-wrap">
+                  <button type="button" class="cc-btn-icon cc-btn-settings" id="cc-btn-settings" aria-label="Admin / Settings" aria-expanded="false" aria-haspopup="true">
+                    <svg class="cc-icon-gear" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                  </button>
+                  <div class="cc-settings-dropdown" id="cc-settings-dropdown" role="menu" hidden>
+                    <a href="#" class="cc-settings-item" role="menuitem" data-cc-settings="settings">Settings</a>
+                    <a href="#" class="cc-settings-item" role="menuitem" data-cc-settings="admin">Admin</a>
+                    <a href="#" class="cc-settings-item" role="menuitem" data-cc-settings="profile">Profile</a>
+                  </div>
+                </div>
+                <button type="button" class="cc-logout" id="cc-logout" aria-label="Logout">Logout <span class="cc-logout-icon" aria-hidden="true">→</span></button>
+              </div>
             </header>
             <main class="cc-main">
               <div id="cc-panel-clients" class="cc-panel" data-cc-panel="clients">
@@ -366,6 +380,42 @@
       <div class="cc-modal-actions cc-modal-actions-detail" id="cc-helper-detail-actions">
         <button type="button" class="cc-btn-remove" id="cc-helper-detail-remove">Remove</button>
         <button type="button" class="cc-btn-cancel" id="cc-modal-helper-detail-close">Close</button>
+      </div>
+    </div>
+  </div>
+  <div id="cc-modal-settings" class="cc-modal" role="dialog" aria-labelledby="cc-modal-settings-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" data-cc-close="cc-modal-settings"></div>
+    <div class="cc-modal-card">
+      <h2 id="cc-modal-settings-title" class="cc-modal-title">Settings</h2>
+      <div class="cc-modal-body">
+        <p>Application settings. Add your options here.</p>
+      </div>
+      <div class="cc-modal-actions">
+        <button type="button" class="cc-btn-cancel" data-cc-close="cc-modal-settings">Close</button>
+      </div>
+    </div>
+  </div>
+  <div id="cc-modal-admin" class="cc-modal" role="dialog" aria-labelledby="cc-modal-admin-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" data-cc-close="cc-modal-admin"></div>
+    <div class="cc-modal-card">
+      <h2 id="cc-modal-admin-title" class="cc-modal-title">Admin</h2>
+      <div class="cc-modal-body">
+        <p>Admin tools and configuration. Add admin features here.</p>
+      </div>
+      <div class="cc-modal-actions">
+        <button type="button" class="cc-btn-cancel" data-cc-close="cc-modal-admin">Close</button>
+      </div>
+    </div>
+  </div>
+  <div id="cc-modal-profile" class="cc-modal" role="dialog" aria-labelledby="cc-modal-profile-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" data-cc-close="cc-modal-profile"></div>
+    <div class="cc-modal-card">
+      <h2 id="cc-modal-profile-title" class="cc-modal-title">Profile</h2>
+      <div class="cc-modal-body">
+        <p>Your profile. Add profile fields and actions here.</p>
+      </div>
+      <div class="cc-modal-actions">
+        <button type="button" class="cc-btn-cancel" data-cc-close="cc-modal-profile">Close</button>
       </div>
     </div>
   </div>
