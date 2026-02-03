@@ -266,6 +266,41 @@
       </form>
     </div>
   </div>
+  <div id="cc-modal-client-detail" class="cc-modal" role="dialog" aria-labelledby="cc-modal-client-detail-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" id="cc-modal-client-detail-overlay"></div>
+    <div class="cc-modal-card cc-modal-client-detail-card">
+      <h2 id="cc-modal-client-detail-title" class="cc-modal-title">Client details</h2>
+      <div class="cc-client-detail-body">
+        <div class="cc-client-detail-field">
+          <span class="cc-client-detail-label">Name</span>
+          <p id="cc-detail-name" class="cc-client-detail-value"></p>
+        </div>
+        <div class="cc-client-detail-field">
+          <span class="cc-client-detail-label">Age</span>
+          <p id="cc-detail-age" class="cc-client-detail-value"></p>
+        </div>
+        <div class="cc-client-detail-field">
+          <span class="cc-client-detail-label">Bio</span>
+          <p id="cc-detail-bio" class="cc-client-detail-value"></p>
+        </div>
+        <div class="cc-client-detail-field">
+          <span class="cc-client-detail-label">Needs help with</span>
+          <div id="cc-detail-needs" class="cc-client-detail-tags"></div>
+        </div>
+      </div>
+      <div class="cc-remove-confirm" id="cc-remove-confirm" hidden>
+        <p class="cc-remove-confirm-text">Are you sure you want to remove this client? This cannot be undone.</p>
+        <div class="cc-modal-actions">
+          <button type="button" class="cc-btn-cancel" id="cc-remove-confirm-cancel">Cancel</button>
+          <button type="button" class="cc-btn-remove" id="cc-remove-confirm-yes">Yes, remove</button>
+        </div>
+      </div>
+      <div class="cc-modal-actions cc-modal-actions-detail" id="cc-client-detail-actions">
+        <button type="button" class="cc-btn-remove" id="cc-client-detail-remove">Remove</button>
+        <button type="button" class="cc-btn-cancel" id="cc-modal-client-detail-close">Close</button>
+      </div>
+    </div>
+  </div>
   <script src="/js/app.js"></script>
 </body>
 </html>

@@ -24,7 +24,7 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
 
-  console.log(`MMI API running at http://localhost:${port}/api`);
+  console.log(`MMI running at http://localhost:${port}`);
 }
 
 bootstrap().catch((err) => {

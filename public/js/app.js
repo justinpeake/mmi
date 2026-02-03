@@ -179,6 +179,103 @@
       });
     }
 
+    var modalClientDetail = document.getElementById('cc-modal-client-detail');
+    var overlayClientDetail = document.getElementById('cc-modal-client-detail-overlay');
+    var btnCloseClientDetail = document.getElementById('cc-modal-client-detail-close');
+    var btnRemoveClient = document.getElementById('cc-client-detail-remove');
+    var detailName = document.getElementById('cc-detail-name');
+    var detailAge = document.getElementById('cc-detail-age');
+    var detailBio = document.getElementById('cc-detail-bio');
+    var detailNeeds = document.getElementById('cc-detail-needs');
+    var currentClientCard = null;
+
+    function getClientDataFromCard(card) {
+      var nameEl = card.querySelector('.cc-client-name');
+      var ageEl = card.querySelector('.cc-client-age');
+      var bioEl = card.querySelector('.cc-client-bio');
+      var tagEls = card.querySelectorAll('.cc-tags .cc-tag');
+      var needs = [];
+      for (var i = 0; i < tagEls.length; i++) needs.push(tagEls[i].textContent);
+      return {
+        name: nameEl ? nameEl.textContent : '',
+        age: ageEl ? ageEl.textContent : '',
+        bio: bioEl ? bioEl.textContent : '',
+        needs: needs
+      };
+    }
+
+    function openClientDetailModal(card) {
+      currentClientCard = card;
+      var data = getClientDataFromCard(card);
+      if (detailName) detailName.textContent = data.name || '';
+      if (detailAge) detailAge.textContent = data.age || '';
+      if (detailBio) detailBio.textContent = data.bio || '';
+      if (detailNeeds) {
+        detailNeeds.innerHTML = '';
+        data.needs.forEach(function (tag) {
+          var span = document.createElement('span');
+          span.className = 'cc-tag';
+          span.textContent = tag;
+          detailNeeds.appendChild(span);
+        });
+      }
+      if (modalClientDetail) modalClientDetail.hidden = false;
+    }
+
+    function closeClientDetailModal() {
+      if (modalClientDetail) modalClientDetail.hidden = true;
+      currentClientCard = null;
+      hideRemoveConfirm();
+    }
+
+    if (clientsCardsContainer) {
+      clientsCardsContainer.addEventListener('click', function (e) {
+        if (e.target.closest('.cc-btn-connect')) return;
+        var card = e.target.closest('.cc-client-card');
+        if (!card) return;
+        openClientDetailModal(card);
+      });
+    }
+
+    var removeConfirmEl = document.getElementById('cc-remove-confirm');
+    var clientDetailActionsEl = document.getElementById('cc-client-detail-actions');
+    var btnRemoveConfirmCancel = document.getElementById('cc-remove-confirm-cancel');
+    var btnRemoveConfirmYes = document.getElementById('cc-remove-confirm-yes');
+
+    function showRemoveConfirm() {
+      if (removeConfirmEl) removeConfirmEl.hidden = false;
+      if (clientDetailActionsEl) clientDetailActionsEl.hidden = true;
+    }
+
+    function hideRemoveConfirm() {
+      if (removeConfirmEl) removeConfirmEl.hidden = true;
+      if (clientDetailActionsEl) clientDetailActionsEl.hidden = false;
+    }
+
+    function doRemoveClient() {
+      if (!currentClientCard) return;
+      currentClientCard.remove();
+      ccCounts.clients = Math.max(0, ccCounts.clients - 1);
+      updateCcCounts();
+      hideRemoveConfirm();
+      closeClientDetailModal();
+    }
+
+    if (overlayClientDetail) overlayClientDetail.addEventListener('click', closeClientDetailModal);
+    if (btnCloseClientDetail) btnCloseClientDetail.addEventListener('click', closeClientDetailModal);
+
+    if (btnRemoveClient) {
+      btnRemoveClient.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!currentClientCard) return;
+        showRemoveConfirm();
+      });
+    }
+
+    if (btnRemoveConfirmCancel) btnRemoveConfirmCancel.addEventListener('click', hideRemoveConfirm);
+    if (btnRemoveConfirmYes) btnRemoveConfirmYes.addEventListener('click', doRemoveClient);
+
     var connectionCardsEl = document.getElementById('cc-connection-cards');
     var connectionsEmptyEl = document.getElementById('cc-connections-empty');
     if (connectionCardsEl && connectionsEmptyEl) {
