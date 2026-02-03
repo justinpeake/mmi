@@ -765,6 +765,45 @@
   stroke: #22c55e;
 }
 
+.cc-connection-history {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cc-connection-history-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.cc-connection-history-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.cc-connection-history-item {
+  margin-bottom: 0.35rem;
+}
+
+.cc-connection-history-item:last-child {
+  margin-bottom: 0;
+}
+
+.cc-connection-history-when {
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+}
+
+.cc-connection-history-by {
+  font-weight: 600;
+  color: #374151;
+}
+
 .cc-connections-empty {
   margin: 0;
   font-size: 0.95rem;

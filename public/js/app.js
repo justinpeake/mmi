@@ -92,9 +92,25 @@
     var ccPanels = document.querySelectorAll('.cc-panel');
     var ccCounts = { clients: 3, helpers: 4, connections: 1 };
 
-    /** Single source of truth for connections. { clientName, helperName, status: 'active'|'paused'|'complete' } */
+    /** Who performed the action (replace with real user when auth exists) */
+    function getCurrentUserName() {
+      try {
+        return sessionStorage.getItem('mmi-user-name') || 'Staff';
+      } catch (e) {
+        return 'Staff';
+      }
+    }
+
+    /** Single source of truth for connections. { clientName, helperName, status, history: [{ type, date, by }] } */
     var connectionsList = [
-      { clientName: 'Margaret Thompson', helperName: 'Sarah Martinez', status: 'active' }
+      {
+        clientName: 'Margaret Thompson',
+        helperName: 'Sarah Martinez',
+        status: 'active',
+        history: [
+          { type: 'created', date: '2026-01-15T10:00:00.000Z', by: 'Staff' }
+        ]
+      }
     ];
 
     function updateCcCounts() {
@@ -407,7 +423,12 @@
           var clientName = getClientNameFromCard(clientCard);
           var helperName = (suggestedCard.getAttribute('data-helper-name') || '').trim();
           if (!clientName || !helperName) return;
-          connectionsList.push({ clientName: clientName, helperName: helperName, status: 'active' });
+          connectionsList.push({
+            clientName: clientName,
+            helperName: helperName,
+            status: 'active',
+            history: [{ type: 'created', date: new Date().toISOString(), by: getCurrentUserName() }]
+          });
           renderConnectionsPanel();
           updateCcCounts();
           updateSuggestedConnectionsForAllClients();
@@ -672,6 +693,22 @@
     var connectionCardsEl = document.getElementById('cc-connection-cards');
     var connectionsEmptyEl = document.getElementById('cc-connections-empty');
 
+    function formatHistoryDate(isoDate) {
+      try {
+        var d = new Date(isoDate);
+        var dateStr = d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        var timeStr = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        return dateStr + ' ' + timeStr;
+      } catch (e) {
+        return isoDate || '';
+      }
+    }
+
+    function formatHistoryEventType(type) {
+      var labels = { created: 'Created', paused: 'Paused', resumed: 'Resumed', completed: 'Completed' };
+      return labels[type] || type;
+    }
+
     function renderConnectionsPanel() {
       ccCounts.connections = connectionsList.length;
       if (!connectionCardsEl) return;
@@ -704,6 +741,21 @@
         }
         html += '<button type="button" class="cc-btn-complete" aria-label="Complete"' + (status === 'complete' ? ' disabled' : '') + '><span class="cc-btn-complete-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Complete</button>';
         html += '</div>';
+        var history = c.history || [];
+        if (history.length > 0) {
+          html += '<div class="cc-connection-history">';
+          html += '<p class="cc-connection-history-title">Connection history</p>';
+          html += '<ul class="cc-connection-history-list" aria-label="Connection history">';
+          for (var j = history.length - 1; j >= 0; j--) {
+            var ev = history[j];
+            var label = formatHistoryEventType(ev.type);
+            var when = formatHistoryDate(ev.date);
+            var by = (ev.by || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+            html += '<li class="cc-connection-history-item"><span class="cc-connection-history-when">' + when + '</span> – ' + label + ' by <span class="cc-connection-history-by">' + by + '</span></li>';
+          }
+          html += '</ul>';
+          html += '</div>';
+        }
         html += '</article>';
       }
       connectionCardsEl.innerHTML = html;
@@ -726,7 +778,10 @@
           e.preventDefault();
           for (var i = 0; i < connectionsList.length; i++) {
             if (connectionsList[i].clientName === clientName && connectionsList[i].helperName === helperName) {
-              connectionsList[i].status = 'paused';
+              var conn = connectionsList[i];
+              conn.status = 'paused';
+              if (!conn.history) conn.history = [];
+              conn.history.push({ type: 'paused', date: new Date().toISOString(), by: getCurrentUserName() });
               break;
             }
           }
@@ -738,7 +793,10 @@
           e.preventDefault();
           for (var i = 0; i < connectionsList.length; i++) {
             if (connectionsList[i].clientName === clientName && connectionsList[i].helperName === helperName) {
-              connectionsList[i].status = 'active';
+              var conn = connectionsList[i];
+              conn.status = 'active';
+              if (!conn.history) conn.history = [];
+              conn.history.push({ type: 'resumed', date: new Date().toISOString(), by: getCurrentUserName() });
               break;
             }
           }
@@ -750,7 +808,10 @@
           e.preventDefault();
           for (var i = 0; i < connectionsList.length; i++) {
             if (connectionsList[i].clientName === clientName && connectionsList[i].helperName === helperName) {
-              connectionsList[i].status = 'complete';
+              var conn = connectionsList[i];
+              conn.status = 'complete';
+              if (!conn.history) conn.history = [];
+              conn.history.push({ type: 'completed', date: new Date().toISOString(), by: getCurrentUserName() });
               break;
             }
           }
