@@ -356,6 +356,7 @@
 
     function getSuggestedHelpersForClient(clientTags, allHelpers) {
       if (clientTags.length === 0) return [];
+      allHelpers = allHelpers.filter(function (h) { return h.isActive !== false; });
       var withScore = [];
       for (var i = 0; i < allHelpers.length; i++) {
         var h = allHelpers[i];
@@ -681,6 +682,7 @@
         currentList.className = 'cc-current-list';
         currentWrap.appendChild(currentList);
         article.appendChild(currentWrap);
+        article.setAttribute('data-is-active', 'true');
         helpersCardsContainer.appendChild(article);
         ccCounts.helpers += 1;
         updateCcCounts();
@@ -693,15 +695,12 @@
     var modalHelperDetail = document.getElementById('cc-modal-helper-detail');
     var overlayHelperDetail = document.getElementById('cc-modal-helper-detail-overlay');
     var btnCloseHelperDetail = document.getElementById('cc-modal-helper-detail-close');
-    var btnRemoveHelper = document.getElementById('cc-helper-detail-remove');
+    var btnHelperPause = document.getElementById('cc-helper-detail-pause');
     var helperDetailName = document.getElementById('cc-helper-detail-name');
     var helperDetailSince = document.getElementById('cc-helper-detail-since');
     var helperDetailBio = document.getElementById('cc-helper-detail-bio');
     var helperDetailNeeds = document.getElementById('cc-helper-detail-needs');
-    var helperRemoveConfirmEl = document.getElementById('cc-helper-remove-confirm');
     var helperDetailActionsEl = document.getElementById('cc-helper-detail-actions');
-    var btnHelperRemoveConfirmCancel = document.getElementById('cc-helper-remove-confirm-cancel');
-    var btnHelperRemoveConfirmYes = document.getElementById('cc-helper-remove-confirm-yes');
     var currentHelperCard = null;
 
     function getHelperDataFromCard(card) {
@@ -712,7 +711,42 @@
       var needs = [];
       for (var i = 0; i < tagEls.length; i++) needs.push(tagEls[i].textContent);
       var since = ageEl ? ageEl.textContent.replace(/^Volunteer since\s*/i, '') : '';
-      return { name: nameEl ? nameEl.textContent : '', since: since, bio: bioEl ? bioEl.textContent : '', needs: needs };
+      var isActive = card.getAttribute('data-is-active') !== 'false';
+      return { name: nameEl ? nameEl.textContent.trim() : '', since: since, bio: bioEl ? bioEl.textContent : '', needs: needs, isActive: isActive };
+    }
+
+    function getHelperCardByName(name) {
+      var cards = document.querySelectorAll('#cc-panel-helpers .cc-helper-card');
+      for (var i = 0; i < cards.length; i++) {
+        var n = (cards[i].querySelector('.cc-client-name') || {}).textContent;
+        if (n && n.trim() === (name || '').trim()) return cards[i];
+      }
+      return null;
+    }
+
+    var helperDetailConnectionsList = document.getElementById('cc-helper-detail-connections-list');
+    var helperDetailConnectionsWrap = document.getElementById('cc-helper-detail-connections');
+
+    function populateHelperDetailConnections(helperName) {
+      if (!helperDetailConnectionsList || !helperDetailConnectionsWrap) return;
+      var connections = getConnectionsForHelper(helperName || '');
+      if (connections.length === 0) {
+        helperDetailConnectionsList.innerHTML = '<p class="cc-helper-detail-connections-empty">No past connections.</p>';
+        return;
+      }
+      var html = '';
+      for (var i = 0; i < connections.length; i++) {
+        var conn = connections[i];
+        var clientEsc = (conn.clientName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+        var status = conn.status || 'active';
+        var statusClass = status === 'active' ? 'cc-helper-detail-conn-status cc-helper-detail-conn-active' : status === 'paused' ? 'cc-helper-detail-conn-status cc-helper-detail-conn-paused' : 'cc-helper-detail-conn-status cc-helper-detail-conn-complete';
+        var statusText = status === 'active' ? 'Connected' : status === 'paused' ? 'Paused' : 'Complete';
+        html += '<button type="button" class="cc-helper-detail-connection-item" data-client-name="' + clientEsc + '" data-helper-name="' + (helperName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;') + '">';
+        html += '<span class="cc-helper-detail-conn-client">' + (conn.clientName || '') + '</span>';
+        html += '<span class="' + statusClass + '">' + statusText + '</span>';
+        html += '</button>';
+      }
+      helperDetailConnectionsList.innerHTML = html;
     }
 
     function openHelperDetailModal(card) {
@@ -731,6 +765,9 @@
           helperDetailNeeds.appendChild(span);
         });
       }
+      populateHelperDetailConnections(data.name);
+      updateHelperDetailPauseButton(data.isActive);
+      if (helperDetailActionsEl) helperDetailActionsEl.hidden = false;
       if (modalHelperDetail) modalHelperDetail.hidden = false;
     }
 
@@ -749,6 +786,14 @@
           helperDetailNeeds.appendChild(span);
         });
       }
+      populateHelperDetailConnections(data.name);
+      var allHelpers = getAllHelpersData();
+      var isActive = true;
+      for (var i = 0; i < allHelpers.length; i++) {
+        if ((allHelpers[i].name || '').trim() === (data.name || '').trim()) { isActive = allHelpers[i].isActive !== false; break; }
+      }
+      updateHelperDetailPauseButton(isActive);
+      if (helperDetailActionsEl) helperDetailActionsEl.hidden = false;
       if (modalHelperDetail) modalHelperDetail.hidden = false;
     }
 
@@ -758,26 +803,32 @@
         modalHelperDetail.classList.remove('from-suggested');
       }
       currentHelperCard = null;
-      hideHelperRemoveConfirm();
     }
 
-    function showHelperRemoveConfirm() {
-      if (helperRemoveConfirmEl) helperRemoveConfirmEl.hidden = false;
-      if (helperDetailActionsEl) helperDetailActionsEl.hidden = true;
+    function updateHelperDetailPauseButton(isActive) {
+      if (!btnHelperPause) return;
+      if (isActive) {
+        btnHelperPause.textContent = 'Pause';
+        btnHelperPause.setAttribute('aria-label', 'Pause helper');
+        btnHelperPause.className = 'cc-btn-pause';
+      } else {
+        btnHelperPause.textContent = 'Activate';
+        btnHelperPause.setAttribute('aria-label', 'Activate helper');
+        btnHelperPause.className = 'cc-btn-resume';
+      }
     }
 
-    function hideHelperRemoveConfirm() {
-      if (helperRemoveConfirmEl) helperRemoveConfirmEl.hidden = true;
-      if (helperDetailActionsEl) helperDetailActionsEl.hidden = false;
-    }
-
-    function doRemoveHelper() {
-      if (!currentHelperCard) return;
-      currentHelperCard.remove();
-      ccCounts.helpers = Math.max(0, ccCounts.helpers - 1);
-      updateCcCounts();
-      hideHelperRemoveConfirm();
-      closeHelperDetailModal();
+    function toggleHelperActive() {
+      var name = helperDetailName ? helperDetailName.textContent.trim() : '';
+      if (!name) return;
+      var card = currentHelperCard || getHelperCardByName(name);
+      if (!card) return;
+      var isActive = card.getAttribute('data-is-active') !== 'false';
+      var nextActive = !isActive;
+      card.setAttribute('data-is-active', nextActive ? 'true' : 'false');
+      card.classList.toggle('cc-helper-inactive', !nextActive);
+      updateHelperDetailPauseButton(nextActive);
+      updateSuggestedConnectionsForAllClients();
     }
 
     var connectDropdownEl = document.getElementById('cc-connect-dropdown');
@@ -1002,17 +1053,27 @@
     if (overlayHelperDetail) overlayHelperDetail.addEventListener('click', closeHelperDetailModal);
     if (btnCloseHelperDetail) btnCloseHelperDetail.addEventListener('click', closeHelperDetailModal);
 
-    if (btnRemoveHelper) {
-      btnRemoveHelper.addEventListener('click', function (e) {
+    if (helperDetailConnectionsList) {
+      helperDetailConnectionsList.addEventListener('click', function (e) {
+        var btn = e.target.closest('.cc-helper-detail-connection-item');
+        if (!btn) return;
         e.preventDefault();
-        e.stopPropagation();
-        if (!currentHelperCard) return;
-        showHelperRemoveConfirm();
+        var clientName = (btn.getAttribute('data-client-name') || '').trim();
+        var helperName = (btn.getAttribute('data-helper-name') || '').trim();
+        if (clientName && helperName && findConnection(clientName, helperName)) {
+          closeHelperDetailModal();
+          openConnectionDetailModal(clientName, helperName);
+        }
       });
     }
 
-    if (btnHelperRemoveConfirmCancel) btnHelperRemoveConfirmCancel.addEventListener('click', hideHelperRemoveConfirm);
-    if (btnHelperRemoveConfirmYes) btnHelperRemoveConfirmYes.addEventListener('click', doRemoveHelper);
+    if (btnHelperPause) {
+      btnHelperPause.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleHelperActive();
+      });
+    }
 
     var connectionCardsEl = document.getElementById('cc-connection-cards');
     var connectionsEmptyEl = document.getElementById('cc-connections-empty');

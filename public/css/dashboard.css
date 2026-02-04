@@ -1,5 +1,5 @@
 /**
- * Community Connect dashboard – from Figma
+ * Belonging dashboard – from Figma
  * https://www.figma.com/design/VywQr6kXMi3hPy2Gg76Ntx/Untitled?node-id=0-1
  */
 .cc-dashboard {
@@ -287,6 +287,15 @@
 .cc-helper-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-color: #d1d5db;
+}
+
+.cc-helper-card.cc-helper-inactive {
+  opacity: 0.65;
+  border-color: #e5e7eb;
+}
+
+.cc-helper-card.cc-helper-inactive:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .cc-client-header {
@@ -1197,6 +1206,84 @@
 
 .cc-client-detail-field:last-of-type {
   margin-bottom: 0;
+}
+
+.cc-helper-detail-connections {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cc-helper-detail-connections-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.cc-helper-detail-connections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cc-helper-detail-connection-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  text-align: left;
+  color: #1a1a1a;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cc-helper-detail-connection-item:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.cc-helper-detail-conn-client {
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cc-helper-detail-conn-status {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.cc-helper-detail-conn-active {
+  background: #22c55e;
+}
+
+.cc-helper-detail-conn-paused {
+  background: #dc2626;
+}
+
+.cc-helper-detail-conn-complete {
+  background: #6b7280;
+}
+
+.cc-helper-detail-connections-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
 }
 
 .cc-client-detail-label {

@@ -42,7 +42,7 @@
               <div class="cc-brand">
                 <div class="cc-logo-row">
                   <div class="cc-logo-icon" aria-hidden="true">♥</div>
-                  <span class="cc-logo-text">Community Connect</span>
+                  <span class="cc-logo-text">Belonging</span>
                 </div>
                 <p class="cc-tagline">Building stronger communities together</p>
               </div>
@@ -152,7 +152,7 @@
                   <button type="button" class="cc-btn-add-client" id="cc-btn-add-helper">Add Helper</button>
                 </div>
                 <div class="cc-cards cc-helper-cards">
-                  <article class="cc-helper-card">
+                  <article class="cc-helper-card" data-is-active="true">
                     <div class="cc-client-header">
                       <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=Sarah+Miller&size=112&background=e9d5ff&color=6d28d9" alt="">
                       <div class="cc-client-info">
@@ -173,7 +173,7 @@
                       <div class="cc-current-list"></div>
                     </div>
                   </article>
-                  <article class="cc-helper-card">
+                  <article class="cc-helper-card" data-is-active="true">
                     <div class="cc-client-header">
                       <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=James+Wilson&size=112&background=e9d5ff&color=6d28d9" alt="">
                       <div class="cc-client-info">
@@ -194,7 +194,7 @@
                       <div class="cc-current-list"></div>
                     </div>
                   </article>
-                  <article class="cc-helper-card">
+                  <article class="cc-helper-card" data-is-active="true">
                     <div class="cc-client-header">
                       <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=Maria+Garcia&size=112&background=e9d5ff&color=6d28d9" alt="">
                       <div class="cc-client-info">
@@ -215,7 +215,7 @@
                       <div class="cc-current-list"></div>
                     </div>
                   </article>
-                  <article class="cc-helper-card">
+                  <article class="cc-helper-card" data-is-active="true">
                     <div class="cc-client-header">
                       <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=David+Lee&size=112&background=e9d5ff&color=6d28d9" alt="">
                       <div class="cc-client-info">
@@ -431,16 +431,13 @@
           <span class="cc-client-detail-label">Can help with</span>
           <div id="cc-helper-detail-needs" class="cc-client-detail-tags"></div>
         </div>
-      </div>
-      <div class="cc-remove-confirm" id="cc-helper-remove-confirm" hidden>
-        <p class="cc-remove-confirm-text">Are you sure you want to remove this helper? This cannot be undone.</p>
-        <div class="cc-modal-actions">
-          <button type="button" class="cc-btn-cancel" id="cc-helper-remove-confirm-cancel">Cancel</button>
-          <button type="button" class="cc-btn-remove" id="cc-helper-remove-confirm-yes">Yes, remove</button>
+        <div class="cc-helper-detail-connections" id="cc-helper-detail-connections">
+          <p class="cc-helper-detail-connections-title">Past connections</p>
+          <div class="cc-helper-detail-connections-list" id="cc-helper-detail-connections-list"></div>
         </div>
       </div>
       <div class="cc-modal-actions cc-modal-actions-detail" id="cc-helper-detail-actions">
-        <button type="button" class="cc-btn-remove" id="cc-helper-detail-remove">Remove</button>
+        <button type="button" class="cc-btn-pause" id="cc-helper-detail-pause" aria-label="Pause helper">Pause</button>
         <button type="button" class="cc-btn-cancel" id="cc-modal-helper-detail-close">Close</button>
       </div>
     </div>
