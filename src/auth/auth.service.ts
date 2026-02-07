@@ -34,12 +34,18 @@ export class AuthService {
     return user ? this.toResponse(user) : null;
   }
 
-  private toResponse(user: { id: string; username: string; userType: string; orgId: string | null; displayName: string; bio?: string; needs?: string[] }): UserResponse {
+  private toResponse(user: { id: string; username: string; userType: string; orgId: string | null; orgIds?: string[]; displayName: string; bio?: string; needs?: string[] }): UserResponse {
+    const orgIds = user.orgIds?.length ? user.orgIds : (user.orgId ? [user.orgId] : []);
+    const orgNames = orgIds
+      .map((id) => this.store.getOrgById(id)?.name)
+      .filter((n): n is string => !!n);
     return {
       id: user.id,
       username: user.username,
       userType: user.userType as UserResponse['userType'],
       orgId: user.orgId,
+      orgIds: orgIds.length ? orgIds : undefined,
+      orgNames: orgNames.length ? orgNames : undefined,
       displayName: user.displayName,
       bio: user.bio,
       needs: user.needs,

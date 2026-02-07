@@ -72,7 +72,21 @@
             var page = 'home';
             if (data.user.userType === 'superadmin') page = 'orgs';
             else if (data.user.userType === 'orgadmin') page = 'dashboard';
-            else if (data.user.userType === 'serviceprovider') page = 'helper-home';
+            else if (data.user.userType === 'serviceprovider') {
+              var orgIds = data.user.orgIds || (data.user.orgId ? [data.user.orgId] : []);
+              var orgNames = data.user.orgNames || [];
+              if (orgIds.length > 1) {
+                page = 'helper-choose-org';
+              } else if (orgIds.length === 1) {
+                try {
+                  sessionStorage.setItem('mmi-helper-org-id', orgIds[0]);
+                  sessionStorage.setItem('mmi-helper-org-name', orgNames[0] || '');
+                } catch (e) {}
+                page = 'helper-home';
+              } else {
+                page = 'helper-home';
+              }
+            }
             window.location.replace('/app.html#' + page);
           })
           .catch(function (err) {

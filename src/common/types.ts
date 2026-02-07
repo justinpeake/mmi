@@ -15,7 +15,8 @@ export interface User {
   id: string;
   username: string;
   userType: UserType;
-  orgId: string | null;  // null for superadmin
+  orgId: string | null;  // null for superadmin; primary/legacy single org
+  orgIds?: string[];     // for serviceprovider: all orgs they belong to (when multiple)
   displayName: string;
   bio?: string;
   needs?: string[];      // for serviceprovider: "Can mentor in"
@@ -66,6 +67,8 @@ export interface UserResponse {
   username: string;
   userType: UserType;
   orgId: string | null;
+  orgIds?: string[];
+  orgNames?: string[];   // resolved org names for display (e.g. badges)
   displayName: string;
   bio?: string;
   needs?: string[];
