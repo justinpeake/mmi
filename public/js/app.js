@@ -129,12 +129,16 @@
       'helper-profile': 'Profile'
     };
 
-    document.body.classList.toggle('view-dashboard', pageId === 'dashboard');
+    var cleanViewPages = ['dashboard', 'orgs', 'org-detail', 'helper-home', 'helper-profile'];
+    document.body.classList.toggle('view-dashboard', cleanViewPages.indexOf(pageId) !== -1);
 
     pages.forEach(function (p) {
       p.hidden = p.id !== 'page-' + pageId;
     });
     navLinks.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('data-page') === pageId);
+    });
+    document.querySelectorAll('.cc-header-nav-link').forEach(function (a) {
       a.classList.toggle('active', a.getAttribute('data-page') === pageId);
     });
     if (headerTitle && titles[pageId]) headerTitle.textContent = titles[pageId];
@@ -314,8 +318,9 @@
 
       var btnLogout = document.getElementById('btn-logout');
       if (btnLogout) btnLogout.addEventListener('click', logout);
-      var ccLogout = document.getElementById('cc-logout');
-      if (ccLogout) ccLogout.addEventListener('click', logout);
+      document.querySelectorAll('.cc-logout').forEach(function (el) {
+        el.addEventListener('click', logout);
+      });
 
     var btnSettings = document.getElementById('cc-btn-settings');
     var settingsDropdown = document.getElementById('cc-settings-dropdown');
