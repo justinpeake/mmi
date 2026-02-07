@@ -184,6 +184,15 @@
   margin: 0 auto;
 }
 
+.cc-back-btn {
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+.cc-back-btn:hover {
+  color: #7c3aed;
+}
+
 .cc-section-title {
   font-size: 1.5rem;
   font-weight: 700;
@@ -491,6 +500,26 @@
   opacity: 1;
 }
 
+.cc-suggested-pending {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: #f59e0b;
+  border: none;
+  border-radius: 6px;
+  cursor: default;
+  font-family: inherit;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.cc-suggested-pending:disabled {
+  opacity: 1;
+}
+
 .cc-suggested-paused {
   padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
@@ -602,6 +631,10 @@
 
 .cc-current-paused {
   background: #dc2626;
+}
+
+.cc-current-pending {
+  background: #f59e0b;
 }
 
 .cc-current-complete {
@@ -792,6 +825,24 @@
 }
 
 .cc-badge-complete {
+  background: #6b7280;
+  color: #fff;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.cc-badge-pending {
+  background: #f59e0b;
+  color: #fff;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.cc-badge-declined {
   background: #6b7280;
   color: #fff;
   padding: 0.25rem 0.6rem;

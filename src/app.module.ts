@@ -6,6 +6,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthModule } from './health/health.module';
 import { ExampleModule } from './example/example.module';
+import { StoreModule } from './store/store.module';
+import { AuthModule } from './auth/auth.module';
+import { OrgsModule } from './orgs/orgs.module';
+import { ClientsModule } from './clients/clients.module';
+import { ConnectionsModule } from './connections/connections.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -19,6 +25,12 @@ import { ExampleModule } from './example/example.module';
       serveStaticOptions: { index: 'index.html' },
       exclude: ['/api*'],
     }),
+    StoreModule,
+    AuthModule,
+    OrgsModule,
+    ClientsModule,
+    ConnectionsModule,
+    UsersModule,
     HealthModule,
     ExampleModule,
   ],

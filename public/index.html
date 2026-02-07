@@ -16,14 +16,11 @@
         </svg>
       </div>
       <h1 class="login-title">Belong IRL</h1>
+      <p class="login-tagline">Connecting clients with community helpers</p>
       <form id="login-form" class="login-form" action="#" method="post">
         <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" name="email" placeholder="Enter your email" autocomplete="email">
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password">
+          <label for="username">Username or email</label>
+          <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required>
         </div>
         <button type="submit" class="btn-signin">Sign In</button>
       </form>
@@ -36,18 +33,52 @@
   <script>
     (function () {
       var AUTH_KEY = 'mmi-auth';
+      var USER_KEY = 'mmi-user';
       var form = document.getElementById('login-form');
       var messageEl = document.getElementById('message');
       function showMessage(text, type) {
         messageEl.textContent = text;
-        messageEl.className = 'message ' + type;
+        messageEl.className = 'message ' + (type || '');
       }
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         messageEl.className = 'message';
         messageEl.textContent = '';
-        try { sessionStorage.setItem(AUTH_KEY, '1'); } catch (err) { showMessage('Could not save session.', 'error'); return; }
-        window.location.replace('/app.html#dashboard');
+        var username = (document.getElementById('username').value || '').trim();
+        if (!username) {
+          showMessage('Please enter your username.', 'error');
+          return;
+        }
+        var btn = form.querySelector('.btn-signin');
+        if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+        fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username })
+        })
+          .then(function (res) {
+            if (!res.ok) return res.json().then(function (body) { throw new Error(body.message || 'Login failed'); });
+            return res.json();
+          })
+          .then(function (data) {
+            try {
+              sessionStorage.setItem(AUTH_KEY, data.token);
+              sessionStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            } catch (err) {
+              showMessage('Could not save session.', 'error');
+              if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
+              return;
+            }
+            var page = 'home';
+            if (data.user.userType === 'superadmin') page = 'orgs';
+            else if (data.user.userType === 'orgadmin') page = 'dashboard';
+            else if (data.user.userType === 'serviceprovider') page = 'helper-home';
+            window.location.replace('/app.html#' + page);
+          })
+          .catch(function (err) {
+            showMessage(err.message || 'Login failed. Check your username.', 'error');
+            if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
+          });
       });
     })();
   </script>

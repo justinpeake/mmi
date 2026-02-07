@@ -12,10 +12,14 @@
   <div class="app" id="app">
     <aside class="app-sidebar">
       <div class="app-sidebar-header">MMI</div>
-      <nav class="app-nav">
-        <a href="/app.html" class="active" data-page="home">Home</a>
-        <a href="/app.html#dashboard" data-page="dashboard">Dashboard</a>
-        <a href="/app.html#settings" data-page="settings">Settings</a>
+      <nav class="app-nav" id="app-nav">
+        <a href="/app.html#orgs" data-page="orgs" data-role="superadmin">Organizations</a>
+        <a href="/app.html#settings" data-page="settings" data-role="superadmin">Settings</a>
+        <a href="/app.html" data-page="home" data-role="orgadmin">Home</a>
+        <a href="/app.html#dashboard" data-page="dashboard" data-role="orgadmin">Dashboard</a>
+        <a href="/app.html#settings" data-page="settings" data-role="orgadmin">Settings</a>
+        <a href="/app.html#helper-home" data-page="helper-home" data-role="serviceprovider">My clients</a>
+        <a href="/app.html#helper-profile" data-page="helper-profile" data-role="serviceprovider">Profile</a>
       </nav>
     </aside>
     <main class="app-main">
@@ -26,14 +30,84 @@
         </div>
       </header>
       <div class="app-content">
-        <div id="page-home" class="page">
-          <h1 class="page-title">Home</h1>
-          <p class="page-subtitle">Welcome to MMI. Build screens from Figma using user-Figma MCP.</p>
-          <div class="card">
-            <p style="margin:0; color: var(--mmi-text-secondary);">
-              Design file: <a href="https://www.figma.com/make/3lxU3TJjw61ENJyjDuKL1k/MMI" target="_blank" rel="noopener" style="color: var(--mmi-accent);">MMI on Figma</a>.
-              Use <strong>get_design_context</strong> with node IDs to replace this placeholder with code from Figma.
-            </p>
+        <div id="page-orgs" class="page" hidden>
+          <div class="cc-dashboard">
+            <main class="cc-main">
+              <div class="cc-section-header">
+                <div>
+                  <h1 class="cc-section-title">Organizations</h1>
+                  <p class="cc-section-subtitle">MMI admin — manage all organizations. Click an org to view details and metrics.</p>
+                </div>
+                <button type="button" class="cc-btn-add-client" id="btn-add-org">Add organization</button>
+              </div>
+              <div class="cc-cards" id="orgs-cards"></div>
+            </main>
+          </div>
+        </div>
+        <div id="page-org-detail" class="page" hidden>
+          <div class="cc-dashboard">
+            <main class="cc-main">
+              <button type="button" class="btn btn-ghost cc-back-btn" id="org-detail-back">← Back to organizations</button>
+              <div id="org-detail-content"></div>
+            </main>
+          </div>
+        </div>
+        <div id="page-helper-home" class="page" hidden>
+          <div class="cc-dashboard">
+            <main class="cc-main">
+              <div class="cc-section-header">
+                <div>
+                  <h1 class="cc-section-title">My clients</h1>
+                  <p class="cc-section-subtitle">Connected clients and pending connection requests</p>
+                </div>
+              </div>
+              <div class="cc-cards" id="helper-connections-list"></div>
+            </main>
+          </div>
+        </div>
+        <div id="page-helper-profile" class="page" hidden>
+          <div class="cc-dashboard">
+            <main class="cc-main">
+              <div class="cc-section-header">
+                <div>
+                  <h1 class="cc-section-title">Profile</h1>
+                  <p class="cc-section-subtitle">Edit your mentor profile</p>
+                </div>
+              </div>
+              <form id="form-helper-profile" class="cc-client-card" style="max-width: 520px;">
+                <div class="cc-form-group">
+                  <label for="helper-profile-displayName">Display name</label>
+                  <input type="text" id="helper-profile-displayName" name="displayName">
+                </div>
+                <div class="cc-form-group">
+                  <label for="helper-profile-bio">Bio</label>
+                  <textarea id="helper-profile-bio" name="bio" rows="3"></textarea>
+                </div>
+                <div class="cc-form-group">
+                  <label for="helper-profile-needs">Can mentor in (comma-separated)</label>
+                  <input type="text" id="helper-profile-needs" name="needs" placeholder="e.g. Employment, Housing">
+                </div>
+                <button type="submit" class="cc-btn-submit">Save profile</button>
+              </form>
+            </main>
+          </div>
+        </div>
+        <div id="page-home" class="page" hidden>
+          <div class="cc-dashboard">
+            <main class="cc-main">
+              <div class="cc-section-header">
+                <div>
+                  <h1 class="cc-section-title">Home</h1>
+                  <p class="cc-section-subtitle">Welcome to your organization dashboard.</p>
+                </div>
+              </div>
+              <div class="cc-client-card">
+                <p style="margin:0; color: var(--mmi-text-secondary);">
+                  Design file: <a href="https://www.figma.com/make/3lxU3TJjw61ENJyjDuKL1k/MMI" target="_blank" rel="noopener" style="color: var(--mmi-accent);">MMI on Figma</a>.
+                  Use the <strong>Dashboard</strong> tab to manage clients, community mentors, and connections.
+                </p>
+              </div>
+            </main>
           </div>
         </div>
         <div id="page-dashboard" class="page" hidden>
@@ -306,14 +380,56 @@
           </div>
         </div>
         <div id="page-settings" class="page" hidden>
-          <h1 class="page-title">Settings</h1>
-          <p class="page-subtitle">Placeholder — replace with Figma design.</p>
-          <div class="card">
-            <p style="margin:0; color: var(--mmi-text-secondary);">Settings content from Figma (node ID).</p>
+          <div class="cc-dashboard">
+            <main class="cc-main">
+              <div class="cc-section-header">
+                <div>
+                  <h1 class="cc-section-title">Settings</h1>
+                  <p class="cc-section-subtitle" id="settings-subtitle">Application settings</p>
+                </div>
+              </div>
+              <div id="settings-orgadmin" class="settings-content" hidden>
+                <div class="cc-client-card">
+                  <p style="margin:0; color: var(--mmi-text-secondary);">Organization settings and preferences.</p>
+                </div>
+              </div>
+              <div id="settings-superadmin" class="settings-content" hidden>
+                <div class="cc-client-card">
+                  <h3 class="cc-client-detail-section-title">MMI Admin profile</h3>
+                  <p style="margin:0 0 1rem; color: var(--mmi-text-secondary);">Superadmin account settings. You manage organizations and view metrics — no client data here.</p>
+                  <div class="cc-client-detail-field"><span class="cc-client-detail-label">Display name</span><p id="settings-superadmin-displayName" class="cc-client-detail-value">—</p></div>
+                  <div class="cc-client-detail-field"><span class="cc-client-detail-label">Username / email</span><p id="settings-superadmin-username" class="cc-client-detail-value">—</p></div>
+                </div>
+              </div>
+            </main>
           </div>
         </div>
       </div>
     </main>
+  </div>
+  <div id="cc-modal-add-org" class="cc-modal" role="dialog" aria-labelledby="cc-modal-add-org-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" id="cc-modal-add-org-overlay"></div>
+    <div class="cc-modal-card">
+      <h2 id="cc-modal-add-org-title" class="cc-modal-title">Add organization</h2>
+      <form id="cc-form-add-org" class="cc-modal-form">
+        <div class="cc-form-group">
+          <label for="cc-add-org-name">Organization name</label>
+          <input type="text" id="cc-add-org-name" name="name" required placeholder="e.g. TestOrg">
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-org-mainContactName">Main contact name</label>
+          <input type="text" id="cc-add-org-mainContactName" name="mainContactName" required placeholder="Full name">
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-org-mainContactEmail">Main contact email</label>
+          <input type="email" id="cc-add-org-mainContactEmail" name="mainContactEmail" required placeholder="email@org.org">
+        </div>
+        <div class="cc-modal-actions">
+          <button type="button" class="cc-btn-cancel" id="cc-modal-add-org-cancel">Cancel</button>
+          <button type="submit" class="cc-btn-submit">Add organization</button>
+        </div>
+      </form>
+    </div>
   </div>
   <div id="cc-modal-add-client" class="cc-modal" role="dialog" aria-labelledby="cc-modal-add-client-title" aria-modal="true" hidden>
     <div class="cc-modal-overlay" id="cc-modal-add-client-overlay"></div>
@@ -548,11 +664,48 @@
     <div class="cc-modal-card">
       <h2 id="cc-modal-admin-title" class="cc-modal-title">Admin</h2>
       <div class="cc-modal-body">
-        <p>Admin tools and configuration. Add admin features here.</p>
+        <p>Manage users for your organization.</p>
+        <div id="admin-users-list"></div>
+        <button type="button" class="cc-btn-submit" id="cc-admin-add-user-btn">Add user</button>
       </div>
       <div class="cc-modal-actions">
         <button type="button" class="cc-btn-cancel" data-cc-close="cc-modal-admin">Close</button>
       </div>
+    </div>
+  </div>
+  <div id="cc-modal-add-user" class="cc-modal" role="dialog" aria-labelledby="cc-modal-add-user-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" id="cc-modal-add-user-overlay"></div>
+    <div class="cc-modal-card">
+      <h2 id="cc-modal-add-user-title" class="cc-modal-title">Add user</h2>
+      <form id="cc-form-add-user" class="cc-modal-form">
+        <div class="cc-form-group">
+          <label for="cc-add-user-username">Username / email</label>
+          <input type="text" id="cc-add-user-username" name="username" required placeholder="Login username">
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-user-userType">Role</label>
+          <select id="cc-add-user-userType" name="userType" required>
+            <option value="orgadmin">Org Admin</option>
+            <option value="serviceprovider">Service Provider (Mentor)</option>
+          </select>
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-user-displayName">Display name</label>
+          <input type="text" id="cc-add-user-displayName" name="displayName" required placeholder="Full name">
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-user-bio">Bio (optional, for mentors)</label>
+          <textarea id="cc-add-user-bio" name="bio" rows="2" placeholder="Short bio"></textarea>
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-user-needs">Can mentor in (comma-separated, for mentors)</label>
+          <input type="text" id="cc-add-user-needs" name="needs" placeholder="e.g. Employment, Housing">
+        </div>
+        <div class="cc-modal-actions">
+          <button type="button" class="cc-btn-cancel" id="cc-modal-add-user-cancel">Cancel</button>
+          <button type="submit" class="cc-btn-submit">Add user</button>
+        </div>
+      </form>
     </div>
   </div>
   <div id="cc-modal-profile" class="cc-modal" role="dialog" aria-labelledby="cc-modal-profile-title" aria-modal="true" hidden>
