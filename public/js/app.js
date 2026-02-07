@@ -1,38 +1,136 @@
 /**
  * MMI app – client-side nav and auth
- * Redirects to login if not authenticated (sessionStorage).
+ * Redirects to login if not authenticated. Role-based views: superadmin, orgadmin, serviceprovider.
  */
 (function () {
   var AUTH_KEY = 'mmi-auth';
+  var USER_KEY = 'mmi-user';
 
-  function isAuthenticated() {
+  function getToken() {
     try {
-      return !!sessionStorage.getItem(AUTH_KEY);
+      return sessionStorage.getItem(AUTH_KEY);
     } catch (e) {
-      return false;
+      return null;
     }
   }
 
+  function getCurrentUser() {
+    try {
+      var raw = sessionStorage.getItem(USER_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setCurrentUser(user) {
+    try {
+      sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+    } catch (e) {}
+  }
+
+  function apiRequest(url, options) {
+    options = options || {};
+    var headers = options.headers || {};
+    var body = options.body;
+    if (!headers['Content-Type'] && body !== undefined && body !== null) {
+      if (typeof body === 'object' && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
+      else if (typeof body === 'string') headers['Content-Type'] = 'application/json';
+    }
+    var token = getToken();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    return fetch(url, Object.assign({}, options, { headers: headers })).then(function (res) {
+      if (res.status === 401) {
+        sessionStorage.removeItem(AUTH_KEY);
+        sessionStorage.removeItem(USER_KEY);
+        window.location.replace('/');
+        throw new Error('Session expired');
+      }
+      return res;
+    });
+  }
+
+  function isAuthenticated() {
+    return !!getToken() && !!getCurrentUser();
+  }
+
   function ensureAuth() {
-    if (!isAuthenticated()) {
+    var token = getToken();
+    if (!token) {
       window.location.replace('/');
       return false;
     }
-    return true;
+    var user = getCurrentUser();
+    if (!user || !user.userType) {
+      return apiRequest('/api/auth/me').then(function (res) {
+        if (!res.ok) {
+          sessionStorage.removeItem(AUTH_KEY);
+          sessionStorage.removeItem(USER_KEY);
+          window.location.replace('/');
+          return false;
+        }
+        return res.json().then(function (data) {
+          setCurrentUser(data.user);
+          return true;
+        });
+      }).catch(function () {
+        return false;
+      });
+    }
+    return Promise.resolve(true);
   }
 
   function logout() {
     sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(USER_KEY);
     window.location.replace('/');
   }
 
+  function getDefaultPageForRole(userType) {
+    if (userType === 'superadmin') return 'orgs';
+    if (userType === 'orgadmin') return 'dashboard';
+    if (userType === 'serviceprovider') return 'helper-home';
+    return 'home';
+  }
+
+  function isPageAllowedForRole(pageId, userType) {
+    if (pageId === 'orgs' || pageId === 'org-detail' || pageId === 'settings') return userType === 'superadmin';
+    if (pageId === 'home' || pageId === 'dashboard' || pageId === 'settings') return userType === 'orgadmin';
+    if (pageId === 'helper-home' || pageId === 'helper-profile') return userType === 'serviceprovider';
+    return false;
+  }
+
+  function updateNavForRole(userType) {
+    var nav = document.getElementById('app-nav');
+    if (!nav) return;
+    nav.querySelectorAll('a[data-role]').forEach(function (a) {
+      var role = a.getAttribute('data-role');
+      a.hidden = role !== userType;
+    });
+  }
+
   function showPage(pageId) {
+    var user = getCurrentUser();
+    var userType = user && user.userType;
+    var allowed = isPageAllowedForRole(pageId, userType);
+    if (!allowed && userType) {
+      pageId = getDefaultPageForRole(userType);
+    }
     var pages = document.querySelectorAll('.page');
     var navLinks = document.querySelectorAll('.app-nav a');
     var headerTitle = document.getElementById('header-title');
-    var titles = { home: 'Home', dashboard: 'Dashboard', settings: 'Settings' };
+    var titles = {
+      home: 'Home',
+      dashboard: 'Dashboard',
+      settings: 'Settings',
+      orgs: 'Organizations',
+      'org-detail': 'Organization',
+      'helper-home': 'My clients',
+      'helper-profile': 'Profile'
+    };
 
-    document.body.classList.toggle('view-dashboard', pageId === 'dashboard');
+    var cleanViewPages = ['dashboard', 'orgs', 'org-detail', 'helper-home', 'helper-profile'];
+    document.body.classList.toggle('view-dashboard', cleanViewPages.indexOf(pageId) !== -1);
 
     pages.forEach(function (p) {
       p.hidden = p.id !== 'page-' + pageId;
@@ -40,16 +138,189 @@
     navLinks.forEach(function (a) {
       a.classList.toggle('active', a.getAttribute('data-page') === pageId);
     });
+    document.querySelectorAll('.cc-header-nav-link').forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('data-page') === pageId);
+    });
     if (headerTitle && titles[pageId]) headerTitle.textContent = titles[pageId];
+
+    if (pageId === 'orgs') renderOrgsList();
+    if (pageId === 'org-detail') renderOrgDetail(window.__mmiCurrentOrgId || null);
+    if (pageId === 'helper-home') renderHelperConnections();
+    if (pageId === 'helper-profile') loadHelperProfile();
+    if (pageId === 'dashboard') {
+      var u = getCurrentUser();
+      if (u && u.userType === 'orgadmin' && u.orgId && typeof window.loadDashboardData === 'function') {
+        window.loadDashboardData();
+      }
+    }
+    if (pageId === 'settings') {
+      var sa = document.getElementById('settings-superadmin');
+      var oa = document.getElementById('settings-orgadmin');
+      var sub = document.getElementById('settings-subtitle');
+      if (userType === 'superadmin') {
+        if (sa) sa.hidden = false;
+        if (oa) oa.hidden = true;
+        if (sub) sub.textContent = 'MMI Admin profile and preferences';
+        var dn = document.getElementById('settings-superadmin-displayName');
+        var un = document.getElementById('settings-superadmin-username');
+        if (user) {
+          if (dn) dn.textContent = user.displayName || '—';
+          if (un) un.textContent = user.username || '—';
+        }
+      } else {
+        if (sa) sa.hidden = true;
+        if (oa) oa.hidden = false;
+        if (sub) sub.textContent = 'Organization settings';
+      }
+    }
+  }
+
+  function renderOrgsList() {
+    var container = document.getElementById('orgs-cards');
+    if (!container) return;
+    apiRequest('/api/orgs').then(function (res) {
+      if (!res.ok) { container.innerHTML = '<p class="message error">Could not load organizations.</p>'; return; }
+      return res.json();
+    }).then(function (orgs) {
+      if (!orgs) return;
+      container.innerHTML = orgs.map(function (org) {
+        var name = (org.name || 'Org').replace(/</g, '&lt;');
+        var contact = (org.mainContactName || '').replace(/</g, '&lt;') + (org.mainContactEmail ? ' · ' + (org.mainContactEmail || '').replace(/</g, '&lt;') : '');
+        var avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(org.name || 'O') + '&size=112&background=e9d5ff&color=6d28d9';
+        return '<article class="cc-client-card org-card" role="button" tabindex="0" data-org-id="' + (org.id || '') + '">' +
+          '<div class="cc-client-header">' +
+          '<img class="cc-client-avatar" src="' + avatarUrl + '" alt="">' +
+          '<div class="cc-client-info">' +
+          '<h2 class="cc-client-name">' + name + '</h2>' +
+          '<p class="cc-client-age">' + (contact || '—') + '</p>' +
+          '</div></div>' +
+          '<p class="cc-client-bio">Click to view org details, contacts and metrics.</p>' +
+          '</article>';
+      }).join('') || '<p class="cc-section-subtitle">No organizations yet. Add one to get started.</p>';
+      container.querySelectorAll('.org-card').forEach(function (el) {
+        el.addEventListener('click', function () {
+          var id = el.getAttribute('data-org-id');
+          if (id) { window.__mmiCurrentOrgId = id; showPage('org-detail'); window.history.replaceState({}, '', '/app.html#org-detail/' + id); }
+        });
+      });
+    }).catch(function () {
+      if (container) container.innerHTML = '<p class="message error">Could not load organizations.</p>';
+    });
+  }
+
+  function renderOrgDetail(orgId) {
+    var container = document.getElementById('org-detail-content');
+    if (!container) return;
+    if (!orgId) { container.innerHTML = '<p class="cc-section-subtitle">Select an organization.</p>'; return; }
+    apiRequest('/api/orgs/' + orgId).then(function (res) {
+      if (!res.ok) { container.innerHTML = '<p class="message error">Could not load organization.</p>'; return null; }
+      return res.json();
+    }).then(function (org) {
+      if (!org) return;
+      var name = (org.name || '').replace(/</g, '&lt;');
+      var contactsHtml = (org.mainContacts || []).map(function (c) {
+        return '<div class="cc-client-detail-field"><span class="cc-client-detail-label">' + (c.displayName || '—').replace(/</g, '&lt;') + '</span><p class="cc-client-detail-value">' + (c.email || '—').replace(/</g, '&lt;') + '</p></div>';
+      }).join('') || '<p class="cc-client-detail-value">—</p>';
+      var m = org.metrics || {};
+      container.innerHTML =
+        '<h1 class="cc-section-title">' + name + '</h1>' +
+        '<p class="cc-section-subtitle">Organization details and metrics</p>' +
+        '<section class="cc-client-card" style="margin-bottom: 1.5rem;">' +
+        '<h3 class="cc-client-detail-section-title">Main contacts</h3>' +
+        contactsHtml +
+        '</section>' +
+        '<section class="cc-client-card">' +
+        '<h3 class="cc-client-detail-section-title">Metrics</h3>' +
+        '<div class="cc-client-detail-field"><span class="cc-client-detail-label">Clients</span><p class="cc-client-detail-value">' + (m.clientsCount || 0) + '</p></div>' +
+        '<div class="cc-client-detail-field"><span class="cc-client-detail-label">Community helpers</span><p class="cc-client-detail-value">' + (m.helpersCount || 0) + '</p></div>' +
+        '<div class="cc-client-detail-field"><span class="cc-client-detail-label">Connections</span><p class="cc-client-detail-value">' + (m.connectionsCount || 0) + ' (active: ' + (m.activeConnections || 0) + ', pending: ' + (m.pendingConnections || 0) + ')</p></div>' +
+        '</section>';
+    }).catch(function () {
+      if (container) container.innerHTML = '<p class="message error">Could not load organization.</p>';
+    });
+  }
+
+  function renderHelperConnections() {
+    var container = document.getElementById('helper-connections-list');
+    if (!container) return;
+    apiRequest('/api/connections/me').then(function (res) {
+      if (!res.ok) { container.innerHTML = '<p class="message error">Could not load your connections.</p>'; return null; }
+      return res.json();
+    }).then(function (list) {
+      if (!list) return;
+      window.__mmiHelperConnections = list;
+      if (!list.length) { container.innerHTML = '<p>No connected or pending clients.</p>'; return; }
+      container.innerHTML = list.map(function (item) {
+        var c = item.client || {};
+        var status = item.status || '';
+        var statusClass = status === 'pending' ? 'cc-badge-pending' : status === 'active' ? 'cc-badge-active' : 'cc-badge-' + status;
+        var actions = '';
+        if (status === 'pending') {
+          actions = '<div class="cc-modal-actions">' +
+            '<button type="button" class="cc-btn-cancel btn-decline-connection" data-connection-id="' + (item.id || '') + '">Decline</button>' +
+            '<button type="button" class="cc-btn-submit btn-accept-connection" data-connection-id="' + (item.id || '') + '">Accept</button>' +
+            '</div>';
+        }
+        var clientId = (c.id || '').replace(/"/g, '&quot;');
+        return '<article class="cc-client-card" role="button" tabindex="0" data-client-id="' + clientId + '">' +
+          '<div class="cc-client-header">' +
+          '<div class="cc-client-info"><h2 class="cc-client-name">' + (c.name || '').replace(/</g, '&lt;') + '</h2>' +
+          '<span class="cc-badge ' + statusClass + '">' + (status === 'pending' ? 'Pending your response' : status) + '</span></div>' +
+          '</div>' +
+          (c.bio ? '<p class="cc-client-bio">' + (c.bio || '').replace(/</g, '&lt;') + '</p>' : '') +
+          actions +
+          '</article>';
+      }).join('');
+      container.querySelectorAll('.btn-accept-connection').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-connection-id');
+          if (!id) return;
+          apiRequest('/api/connections/' + id + '/accept', { method: 'PATCH' }).then(function (r) {
+            if (r.ok) renderHelperConnections();
+          });
+        });
+      });
+      container.querySelectorAll('.btn-decline-connection').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-connection-id');
+          if (!id) return;
+          apiRequest('/api/connections/' + id + '/decline', { method: 'PATCH' }).then(function (r) {
+            if (r.ok) renderHelperConnections();
+          });
+        });
+      });
+    }).catch(function () {
+      if (container) container.innerHTML = '<p class="message error">Could not load connections.</p>';
+    });
+  }
+
+  function loadHelperProfile() {
+    apiRequest('/api/users/me').then(function (res) {
+      if (!res.ok) return;
+      return res.json().then(function (user) {
+        document.getElementById('helper-profile-displayName').value = user.displayName || '';
+        document.getElementById('helper-profile-bio').value = user.bio || '';
+        document.getElementById('helper-profile-needs').value = (user.needs || []).join(', ');
+      });
+    });
   }
 
   function init() {
-    if (!ensureAuth()) return;
+    var p = ensureAuth();
+    if (!p || !p.then) {
+      if (!p) return;
+      p = Promise.resolve(true);
+    }
+    p.then(function (ok) {
+      if (!ok) return;
+      var user = getCurrentUser();
+      if (user && user.userType) updateNavForRole(user.userType);
 
-    var btnLogout = document.getElementById('btn-logout');
-    if (btnLogout) btnLogout.addEventListener('click', logout);
-    var ccLogout = document.getElementById('cc-logout');
-    if (ccLogout) ccLogout.addEventListener('click', logout);
+      var btnLogout = document.getElementById('btn-logout');
+      if (btnLogout) btnLogout.addEventListener('click', logout);
+      document.querySelectorAll('.cc-logout').forEach(function (el) {
+        el.addEventListener('click', logout);
+      });
 
     var btnSettings = document.getElementById('cc-btn-settings');
     var settingsDropdown = document.getElementById('cc-settings-dropdown');
@@ -92,13 +363,10 @@
     var ccPanels = document.querySelectorAll('.cc-panel');
     var ccCounts = { clients: 3, helpers: 4, connections: 1 };
 
-    /** Who performed the action (replace with real user when auth exists) */
+    /** Who performed the action */
     function getCurrentUserName() {
-      try {
-        return sessionStorage.getItem('mmi-user-name') || 'Staff';
-      } catch (e) {
-        return 'Staff';
-      }
+      var user = getCurrentUser();
+      return (user && (user.displayName || user.username)) || 'Staff';
     }
 
     /** Single source of truth for connections. { clientName, helperName, status, history: [{ type, date, by }] } */
@@ -566,12 +834,45 @@
       }
     }
 
+    var clientDetailHeaderActions = document.querySelector('#cc-modal-client-detail .cc-modal-client-detail-header-actions');
+
     function openClientDetailModal(card) {
       currentClientCard = card;
       currentClientData = getFullClientForModal(card);
       populateView(currentClientData);
       populateEdit(currentClientData);
       showClientDetailViewMode();
+      if (clientDetailHeaderActions) clientDetailHeaderActions.style.display = '';
+      var user = getCurrentUser();
+      var canRemove = user && (user.userType === 'orgadmin' || user.userType === 'superadmin');
+      if (btnRemoveClient) btnRemoveClient.style.display = canRemove ? '' : 'none';
+      if (modalClientDetail) modalClientDetail.hidden = false;
+    }
+
+    /** Open client profile in read-only mode (e.g. from helper "My clients" view). clientData: { name, age, bio, needs } from API. */
+    function openClientDetailModalReadOnly(clientData) {
+      if (!clientData) return;
+      currentClientCard = null;
+      currentClientData = null;
+      var viewData = {
+        name: clientData.name,
+        age: clientData.age,
+        address: clientData.address || '',
+        contact: clientData.contact || '',
+        photo: clientData.photo || '',
+        charge: clientData.charge || '',
+        atiPlan: clientData.atiPlan || '',
+        story: clientData.bio || clientData.story || '',
+        certifications: clientData.certifications || '',
+        socialMedia: clientData.socialMedia || '',
+        advocateContact: clientData.advocateContact || '',
+        notes: clientData.notes || '',
+        needs: clientData.needs || []
+      };
+      populateView(viewData);
+      showClientDetailViewMode();
+      if (clientDetailHeaderActions) clientDetailHeaderActions.style.display = 'none';
+      if (btnRemoveClient) btnRemoveClient.style.display = 'none';
       if (modalClientDetail) modalClientDetail.hidden = false;
     }
 
@@ -581,6 +882,7 @@
       currentClientData = null;
       showClientDetailViewMode();
       hideRemoveConfirm();
+      if (clientDetailHeaderActions) clientDetailHeaderActions.style.display = '';
     }
 
     if (btnEdit) btnEdit.addEventListener('click', function () { showClientDetailEditMode(); });
@@ -734,6 +1036,10 @@
           btnClass = 'cc-suggested-connected';
           btnText = 'Connected';
           disabled = ' disabled';
+        } else if (status === 'pending') {
+          btnClass = 'cc-suggested-pending';
+          btnText = 'Pending';
+          disabled = ' disabled';
         } else if (status === 'paused') {
           btnClass = 'cc-suggested-paused';
           btnText = 'Paused';
@@ -743,12 +1049,19 @@
           btnText = 'Complete';
           disabled = ' disabled';
         }
-        html += '<div class="cc-suggested-card" role="button" tabindex="0" data-helper-name="' + name + '" data-helper-since="' + since + '" data-helper-bio="' + bio + '" data-helper-needs="' + needsAttr + '">';
+        var helperId = '';
+        if (window.__mmiDashboardHelpers) {
+          var hh = window.__mmiDashboardHelpers.filter(function (x) { return (x.displayName || x.name || '') === name; })[0];
+          if (hh && hh.id) helperId = hh.id;
+        }
+        html += '<div class="cc-suggested-card" role="button" tabindex="0" data-helper-name="' + name + '" data-helper-id="' + (helperId || '').replace(/"/g, '&quot;') + '" data-helper-since="' + since + '" data-helper-bio="' + bio + '" data-helper-needs="' + needsAttr + '">';
         html += '<span class="cc-suggested-card-name">' + (h.name || '') + '</span>';
         if (status === 'paused') {
           html += '<button type="button" class="' + btnClass + '" disabled><span class="cc-suggested-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></span>' + btnText + '</button>';
         } else if (status === 'complete') {
           html += '<button type="button" class="' + btnClass + '" disabled><span class="cc-suggested-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>' + btnText + '</button>';
+        } else if (status === 'pending') {
+          html += '<button type="button" class="' + btnClass + '" disabled>' + btnText + '</button>';
         } else {
           html += '<button type="button" class="' + btnClass + '"' + disabled + '>' + btnText + '</button>';
         }
@@ -809,8 +1122,8 @@
         var conn = connections[i];
         var clientName = (conn.clientName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
         var status = conn.status || 'active';
-        var btnClass = status === 'active' ? 'cc-current-status cc-current-connected' : status === 'paused' ? 'cc-current-status cc-current-paused' : 'cc-current-status cc-current-complete';
-        var label = status === 'active' ? 'Connected' : status === 'paused' ? 'Paused' : 'Complete';
+        var btnClass = status === 'active' ? 'cc-current-status cc-current-connected' : status === 'paused' ? 'cc-current-status cc-current-paused' : status === 'pending' ? 'cc-current-status cc-current-pending' : 'cc-current-status cc-current-complete';
+        var label = status === 'active' ? 'Connected' : status === 'paused' ? 'Paused' : status === 'pending' ? 'Pending' : 'Complete';
         html += '<div class="cc-current-card" role="button" tabindex="0" data-client-name="' + (conn.clientName || '').replace(/"/g, '&quot;') + '">';
         html += '<span class="cc-current-card-name">' + (conn.clientName || '') + '</span>';
         if (status === 'paused') {
@@ -845,6 +1158,54 @@
       }
     }
 
+    function loadDashboardData() {
+      var user = getCurrentUser();
+      if (!user || !user.orgId) return;
+      var orgId = user.orgId;
+      Promise.all([
+        apiRequest('/api/orgs/' + orgId + '/clients').then(function (r) { return r.ok ? r.json() : []; }),
+        apiRequest('/api/orgs/' + orgId + '/users').then(function (r) { return r.ok ? r.json() : []; }),
+        apiRequest('/api/orgs/' + orgId + '/connections').then(function (r) { return r.ok ? r.json() : []; })
+      ]).then(function (results) {
+        var clients = results[0] || [];
+        var users = results[1] || [];
+        var connectionsApi = results[2] || [];
+        var helpers = users.filter(function (u) { return u.userType === 'serviceprovider'; });
+        window.__mmiDashboardClients = clients;
+        window.__mmiDashboardHelpers = helpers;
+        var mapped = connectionsApi.map(function (c) {
+          var client = c.client || {};
+          var helper = c.helper || {};
+          return {
+            id: c.id,
+            clientId: c.clientId,
+            helperId: c.helperId,
+            clientName: client.name || '',
+            helperName: helper.displayName || '',
+            status: c.status || 'active',
+            history: [{ type: 'created', date: c.createdAt || new Date().toISOString(), by: 'Staff' }]
+          };
+        });
+        connectionsList.length = 0;
+        mapped.forEach(function (c) { connectionsList.push(c); });
+        document.querySelectorAll('#cc-panel-clients .cc-client-card').forEach(function (card) {
+          var name = getClientNameFromCard(card);
+          var client = clients.filter(function (c) { return (c.name || '') === name; })[0];
+          if (client) card.setAttribute('data-client-id', client.id);
+        });
+        document.querySelectorAll('#cc-panel-helpers .cc-helper-card').forEach(function (card) {
+          var name = getHelperNameFromCard(card);
+          var helper = helpers.filter(function (h) { return (h.displayName || '') === name; })[0];
+          if (helper) card.setAttribute('data-helper-id', helper.id);
+        });
+        renderConnectionsPanel();
+        updateCcCounts();
+        updateSuggestedConnectionsForAllClients();
+        updateCurrentConnectionsForAllHelpers();
+      }).catch(function () {});
+    }
+    window.loadDashboardData = loadDashboardData;
+
     if (clientsCardsContainer) {
       clientsCardsContainer.addEventListener('click', function (e) {
         if (e.target.closest('.cc-suggested-card')) return;
@@ -863,17 +1224,10 @@
           if (!suggestedCard || !clientCard) return;
           var clientName = getClientNameFromCard(clientCard);
           var helperName = (suggestedCard.getAttribute('data-helper-name') || '').trim();
+          var clientId = clientCard.getAttribute('data-client-id') || '';
+          var helperId = suggestedCard.getAttribute('data-helper-id') || '';
           if (!clientName || !helperName) return;
-          connectionsList.push({
-            clientName: clientName,
-            helperName: helperName,
-            status: 'active',
-            history: [{ type: 'created', date: new Date().toISOString(), by: getCurrentUserName() }]
-          });
-          renderConnectionsPanel();
-          updateCcCounts();
-          updateSuggestedConnectionsForAllClients();
-          updateCurrentConnectionsForAllHelpers();
+          openConnectConfirmModal(helperName, clientName, helperId, clientId);
           return;
         }
         var suggestedCard = e.target.closest('.cc-suggested-card');
@@ -928,6 +1282,22 @@
 
     if (overlayClientDetail) overlayClientDetail.addEventListener('click', closeClientDetailModal);
     if (btnCloseClientDetail) btnCloseClientDetail.addEventListener('click', closeClientDetailModal);
+
+    var helperConnectionsList = document.getElementById('helper-connections-list');
+    if (helperConnectionsList) {
+      helperConnectionsList.addEventListener('click', function (e) {
+        if (e.target.closest('button')) return;
+        var card = e.target.closest('.cc-client-card');
+        if (!card) return;
+        var clientId = card.getAttribute('data-client-id');
+        if (!clientId) return;
+        var list = window.__mmiHelperConnections;
+        if (!list || !list.length) return;
+        var item = list.filter(function (x) { return (x.client && x.client.id) === clientId; })[0];
+        if (!item || !item.client) return;
+        openClientDetailModalReadOnly(item.client);
+      });
+    }
 
     if (btnRemoveClient) {
       btnRemoveClient.addEventListener('click', function (e) {
@@ -1194,21 +1564,30 @@
     }
 
     function openConnectDropdown(buttonEl, helperName) {
+      var helperCard = buttonEl && buttonEl.closest('.cc-helper-card');
+      var helperId = helperCard ? helperCard.getAttribute('data-helper-id') : null;
       var available = getAvailableClientsForHelper(helperName);
-      if (connectDropdownEl) connectDropdownEl.setAttribute('data-helper-name', helperName);
+      if (connectDropdownEl) {
+        connectDropdownEl.setAttribute('data-helper-name', helperName);
+        if (helperId) connectDropdownEl.setAttribute('data-helper-id', helperId);
+      }
       if (connectDropdownListEl) {
         connectDropdownListEl.innerHTML = '';
+        var clients = window.__mmiDashboardClients || [];
         if (available.length === 0) {
           if (connectDropdownEmptyEl) connectDropdownEmptyEl.hidden = false;
         } else {
           if (connectDropdownEmptyEl) connectDropdownEmptyEl.hidden = true;
           for (var i = 0; i < available.length; i++) {
             var name = available[i];
+            var client = clients.filter(function (c) { return (c.name || '') === name; })[0];
+            var clientId = client ? client.id : '';
             var item = document.createElement('button');
             item.type = 'button';
             item.className = 'cc-connect-dropdown-item';
             item.textContent = name;
             item.setAttribute('data-client-name', name);
+            if (clientId) item.setAttribute('data-client-id', clientId);
             item.setAttribute('role', 'option');
             connectDropdownListEl.appendChild(item);
           }
@@ -1228,27 +1607,33 @@
       pendingConnection = null;
     }
 
-    function openConnectConfirmModal(helperName, clientName) {
-      pendingConnection = { helperName: helperName, clientName: clientName };
-      if (connectConfirmMessage) connectConfirmMessage.textContent = 'Connect ' + helperName + ' with ' + clientName + '?';
+    function openConnectConfirmModal(helperName, clientName, helperId, clientId) {
+      pendingConnection = { helperName: helperName, clientName: clientName, helperId: helperId || '', clientId: clientId || '' };
+      if (connectConfirmMessage) connectConfirmMessage.textContent = 'Connect ' + helperName + ' with ' + clientName + '? (Connection will be pending until the helper accepts.)';
       if (modalConnectConfirm) modalConnectConfirm.hidden = false;
     }
 
     function doConfirmConnection() {
       if (!pendingConnection) return;
-      var helperName = pendingConnection.helperName;
-      var clientName = pendingConnection.clientName;
-      connectionsList.push({
-        clientName: clientName,
-        helperName: helperName,
-        status: 'active',
-        history: [{ type: 'created', date: new Date().toISOString(), by: getCurrentUserName() }]
-      });
-      renderConnectionsPanel();
-      updateCcCounts();
-      updateSuggestedConnectionsForAllClients();
-      updateCurrentConnectionsForAllHelpers();
-      closeConnectConfirmModal();
+      var user = getCurrentUser();
+      if (!user || !user.orgId) { closeConnectConfirmModal(); return; }
+      var clientId = pendingConnection.clientId;
+      var helperId = pendingConnection.helperId;
+      if (!clientId || !helperId) {
+        closeConnectConfirmModal();
+        return;
+      }
+      apiRequest('/api/orgs/' + user.orgId + '/connections', {
+        method: 'POST',
+        body: JSON.stringify({ clientId: clientId, helperId: helperId })
+      }).then(function (r) {
+        if (r.ok) {
+          loadDashboardData();
+          closeConnectConfirmModal();
+        } else {
+          r.json().then(function (body) { alert(body.message || 'Could not create connection'); });
+        }
+      }).catch(function () { closeConnectConfirmModal(); });
     }
 
     if (helpersCardsContainer) {
@@ -1289,9 +1674,11 @@
         e.preventDefault();
         e.stopPropagation();
         var clientName = item.getAttribute('data-client-name') || '';
+        var clientId = item.getAttribute('data-client-id') || '';
         var helperName = connectDropdownEl ? connectDropdownEl.getAttribute('data-helper-name') : '';
+        var helperId = connectDropdownEl ? connectDropdownEl.getAttribute('data-helper-id') : '';
         closeConnectDropdown();
-        if (clientName && helperName) openConnectConfirmModal(helperName, clientName);
+        if (clientName && helperName) openConnectConfirmModal(helperName, clientName, helperId, clientId);
       });
     }
 
@@ -1451,8 +1838,8 @@
       var status = c.status || 'active';
       var clientEsc = (c.clientName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
       var helperEsc = (c.helperName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-      var badgeClass = status === 'complete' ? 'cc-badge-complete' : status === 'paused' ? 'cc-badge-paused' : 'cc-badge-active';
-      var badgeText = status === 'complete' ? 'Complete' : status === 'paused' ? 'Paused' : 'Active';
+      var badgeClass = status === 'complete' ? 'cc-badge-complete' : status === 'paused' ? 'cc-badge-paused' : status === 'pending' ? 'cc-badge-pending' : 'cc-badge-active';
+      var badgeText = status === 'complete' ? 'Complete' : status === 'paused' ? 'Paused' : status === 'pending' ? 'Pending' : 'Active';
       var createdDate = getConnectionCreatedDate(c);
       var dateStr = createdDate ? formatHistoryDate(createdDate) : 'Connected';
       var html = '<article class="cc-connection-card" data-client-name="' + clientEsc + '" data-helper-name="' + helperEsc + '" data-connection-status="' + status + '">';
@@ -1573,8 +1960,8 @@
         var status = c.status || 'active';
         var clientEsc = (c.clientName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
         var helperEsc = (c.helperName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-        var badgeClass = status === 'complete' ? 'cc-badge-complete' : status === 'paused' ? 'cc-badge-paused' : 'cc-badge-active';
-        var badgeText = status === 'complete' ? 'Complete' : status === 'paused' ? 'Paused' : 'Active';
+        var badgeClass = status === 'complete' ? 'cc-badge-complete' : status === 'paused' ? 'cc-badge-paused' : status === 'pending' ? 'cc-badge-pending' : 'cc-badge-active';
+        var badgeText = status === 'complete' ? 'Complete' : status === 'paused' ? 'Paused' : status === 'pending' ? 'Pending' : 'Active';
         var clientDisplay = highlightKeyword(c.clientName, searchKw);
         var helperDisplay = highlightKeyword(c.helperName, searchKw);
         var badgeDisplay = highlightKeyword(badgeText, searchKw);
@@ -1792,13 +2179,139 @@
     });
 
     window.addEventListener('popstate', function () {
-      var hash = (window.location.hash || '').replace('#', '');
-      showPage(hash === 'dashboard' || hash === 'settings' ? hash : 'home');
+      var hash = (window.location.hash || '').replace('#', '').split('/')[0];
+      var user = getCurrentUser();
+      var userType = user && user.userType;
+      var page = (hash && isPageAllowedForRole(hash, userType)) ? hash : getDefaultPageForRole(userType);
+      if (hash && hash.startsWith('org-detail/')) {
+        window.__mmiCurrentOrgId = hash.split('/')[1];
+        page = 'org-detail';
+      }
+      showPage(page);
     });
 
-    var hash = (window.location.hash || '').replace('#', '') || 'home';
-    var page = hash === 'dashboard' || hash === 'settings' ? hash : 'home';
+    var hash = (window.location.hash || '').replace('#', '').split('/')[0];
+    var user = getCurrentUser();
+    var userType = user && user.userType;
+    var page = (hash && isPageAllowedForRole(hash, userType)) ? hash : getDefaultPageForRole(userType);
+    if ((window.location.hash || '').indexOf('org-detail/') === 1) {
+      window.__mmiCurrentOrgId = (window.location.hash || '').replace('#org-detail/', '').split('/')[0];
+      page = 'org-detail';
+    }
     showPage(page);
+
+    var btnAddOrg = document.getElementById('btn-add-org');
+    if (btnAddOrg) {
+      btnAddOrg.addEventListener('click', function () {
+        var modal = document.getElementById('cc-modal-add-org');
+        if (modal) modal.hidden = false;
+      });
+    }
+    var formAddOrg = document.getElementById('cc-form-add-org');
+    if (formAddOrg) {
+      formAddOrg.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var name = (document.getElementById('cc-add-org-name').value || '').trim();
+        var mainContactName = (document.getElementById('cc-add-org-mainContactName').value || '').trim();
+        var mainContactEmail = (document.getElementById('cc-add-org-mainContactEmail').value || '').trim();
+        if (!name || !mainContactName || !mainContactEmail) return;
+        apiRequest('/api/orgs', { method: 'POST', body: JSON.stringify({ name: name, mainContactName: mainContactName, mainContactEmail: mainContactEmail }) })
+          .then(function (res) { return res.ok ? res.json() : null; })
+          .then(function () {
+            document.getElementById('cc-modal-add-org').hidden = true;
+            formAddOrg.reset();
+            renderOrgsList();
+          });
+      });
+    }
+    var addOrgModal = document.getElementById('cc-modal-add-org');
+    if (document.getElementById('cc-modal-add-org-cancel')) {
+      document.getElementById('cc-modal-add-org-cancel').addEventListener('click', function () { if (addOrgModal) addOrgModal.hidden = true; });
+    }
+    if (document.getElementById('cc-modal-add-org-overlay')) {
+      document.getElementById('cc-modal-add-org-overlay').addEventListener('click', function () { if (addOrgModal) addOrgModal.hidden = true; });
+    }
+    var orgDetailBack = document.getElementById('org-detail-back');
+    if (orgDetailBack) {
+      orgDetailBack.addEventListener('click', function () {
+        window.__mmiCurrentOrgId = null;
+        showPage('orgs');
+        window.history.replaceState({}, '', '/app.html#orgs');
+      });
+    }
+    var formHelperProfile = document.getElementById('form-helper-profile');
+    if (formHelperProfile) {
+      formHelperProfile.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var displayName = (document.getElementById('helper-profile-displayName').value || '').trim();
+        var bio = (document.getElementById('helper-profile-bio').value || '').trim();
+        var needsStr = (document.getElementById('helper-profile-needs').value || '').trim();
+        var needs = needsStr ? needsStr.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+        apiRequest('/api/users/me', { method: 'PATCH', body: JSON.stringify({ displayName: displayName, bio: bio, needs: needs }) })
+          .then(function (res) { if (res.ok) loadHelperProfile(); });
+      });
+    }
+    var adminAddUserBtn = document.getElementById('cc-admin-add-user-btn');
+    if (adminAddUserBtn) {
+      adminAddUserBtn.addEventListener('click', function () {
+        document.getElementById('cc-modal-admin').hidden = true;
+        document.getElementById('cc-modal-add-user').hidden = false;
+      });
+    }
+    var formAddUser = document.getElementById('cc-form-add-user');
+    if (formAddUser) {
+      formAddUser.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var user = getCurrentUser();
+        if (!user || !user.orgId) return;
+        var username = (document.getElementById('cc-add-user-username').value || '').trim();
+        var userType = document.getElementById('cc-add-user-userType').value;
+        var displayName = (document.getElementById('cc-add-user-displayName').value || '').trim();
+        var bio = (document.getElementById('cc-add-user-bio').value || '').trim();
+        var needsStr = (document.getElementById('cc-add-user-needs').value || '').trim();
+        var needs = needsStr ? needsStr.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+        apiRequest('/api/orgs/' + user.orgId + '/users', {
+          method: 'POST',
+          body: JSON.stringify({ username: username, userType: userType, displayName: displayName, bio: bio || undefined, needs: needs.length ? needs : undefined })
+        }).then(function (res) {
+          if (res.ok) {
+            document.getElementById('cc-modal-add-user').hidden = true;
+            formAddUser.reset();
+            document.getElementById('cc-modal-admin').hidden = false;
+            loadAdminUsersList();
+          } else {
+            return res.json().then(function (body) { alert(body.message || 'Failed to add user'); });
+          }
+        });
+      });
+    }
+    document.getElementById('cc-modal-add-user-cancel') && document.getElementById('cc-modal-add-user-cancel').addEventListener('click', function () {
+      document.getElementById('cc-modal-add-user').hidden = true;
+    });
+    document.getElementById('cc-modal-add-user-overlay') && document.getElementById('cc-modal-add-user-overlay').addEventListener('click', function () {
+      document.getElementById('cc-modal-add-user').hidden = true;
+    });
+    function loadAdminUsersList() {
+      var user = getCurrentUser();
+      if (!user || !user.orgId) return;
+      var listEl = document.getElementById('admin-users-list');
+      if (!listEl) return;
+      apiRequest('/api/orgs/' + user.orgId + '/users').then(function (res) {
+        if (!res.ok) { listEl.innerHTML = '<p>Could not load users.</p>'; return null; }
+        return res.json();
+      }).then(function (users) {
+        if (!users) return;
+        listEl.innerHTML = '<ul>' + (users.map(function (u) {
+          return '<li>' + (u.displayName || u.username || '').replace(/</g, '&lt;') + ' — ' + (u.userType || '').replace(/</g, '&lt;') + '</li>';
+        }).join('')) + '</ul>';
+      });
+    }
+    document.querySelectorAll('.cc-settings-item[data-cc-settings="admin"]').forEach(function (item) {
+      item.addEventListener('click', function () {
+        loadAdminUsersList();
+      });
+    });
+  });
   }
 
   if (document.readyState === 'loading') {
