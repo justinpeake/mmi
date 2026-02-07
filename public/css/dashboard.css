@@ -1483,6 +1483,25 @@
   justify-content: space-between;
 }
 
+/* Client profile modal: footer actions and remove-confirm need padding to match card */
+#cc-modal-client-detail .cc-remove-confirm,
+#cc-modal-client-detail .cc-modal-actions-detail {
+  padding: 1.25rem 1.5rem;
+  margin: 0;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+#cc-modal-client-detail .cc-remove-confirm {
+  margin-top: 0;
+  padding-top: 1.25rem;
+}
+
+#cc-modal-client-detail .cc-modal-actions-detail {
+  margin-top: 0;
+}
+
 #cc-modal-helper-detail.from-suggested #cc-helper-detail-remove {
   display: none;
 }
@@ -1490,6 +1509,9 @@
 .cc-remove-confirm {
   margin-top: 1rem;
   padding-top: 1rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-bottom: 1rem;
   border-top: 1px solid #e5e7eb;
 }
 

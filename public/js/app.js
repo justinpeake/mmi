@@ -271,7 +271,7 @@
 
         var needsLabel = document.createElement('p');
         needsLabel.className = 'cc-needs-label';
-        needsLabel.textContent = 'Needs help with:';
+        needsLabel.textContent = 'Seeking support in:';
         article.appendChild(needsLabel);
 
         var tagsDiv = document.createElement('div');
@@ -287,7 +287,7 @@
         var connectBtn = document.createElement('button');
         connectBtn.type = 'button';
         connectBtn.className = 'cc-btn-connect';
-        connectBtn.textContent = 'Connect Helper';
+        connectBtn.textContent = 'Connect Mentor';
         article.appendChild(connectBtn);
 
         var suggestedWrap = document.createElement('div');
@@ -1004,7 +1004,7 @@
         article.appendChild(bioP);
         var needsLabel = document.createElement('p');
         needsLabel.className = 'cc-needs-label';
-        needsLabel.textContent = 'Can help with:';
+        needsLabel.textContent = 'Can mentor in:';
         article.appendChild(needsLabel);
         var tagsDiv = document.createElement('div');
         tagsDiv.className = 'cc-tags';
@@ -1157,11 +1157,11 @@
       if (!btnHelperPause) return;
       if (isActive) {
         btnHelperPause.textContent = 'Pause';
-        btnHelperPause.setAttribute('aria-label', 'Pause helper');
+        btnHelperPause.setAttribute('aria-label', 'Pause mentor');
         btnHelperPause.className = 'cc-btn-pause';
       } else {
         btnHelperPause.textContent = 'Activate';
-        btnHelperPause.setAttribute('aria-label', 'Activate helper');
+        btnHelperPause.setAttribute('aria-label', 'Activate mentor');
         btnHelperPause.className = 'cc-btn-resume';
       }
     }
