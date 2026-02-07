@@ -16,12 +16,17 @@ import { AddUserDto } from './dto/add-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserResponse } from '../common/types';
 
-function toResponse(user: { id: string; username: string; userType: string; orgId: string | null; displayName: string; bio?: string; needs?: string[] }): UserResponse {
+function toResponse(
+  user: { id: string; username: string; userType: string; orgId: string | null; orgIds?: string[]; displayName: string; bio?: string; needs?: string[] },
+  orgNames?: string[],
+): UserResponse {
   return {
     id: user.id,
     username: user.username,
     userType: user.userType as UserResponse['userType'],
     orgId: user.orgId,
+    orgIds: user.orgIds,
+    orgNames: orgNames,
     displayName: user.displayName,
     bio: user.bio,
     needs: user.needs,
@@ -32,6 +37,13 @@ function toResponse(user: { id: string; username: string; userType: string; orgI
 @UseGuards(AuthGuard)
 export class UsersController {
   constructor(private readonly store: StoreService) {}
+
+  private getOrgNamesForUser(user: { orgId: string | null; orgIds?: string[] }): string[] {
+    const orgIds = user.orgIds?.length ? user.orgIds : (user.orgId ? [user.orgId] : []);
+    return orgIds
+      .map((id) => this.store.getOrgById(id)?.name)
+      .filter((n): n is string => !!n);
+  }
 
   private allowSuperadminOrOrgAdmin(req: RequestWithUser, orgId: string): void {
     if (req.user?.userType === 'superadmin') return;
@@ -44,7 +56,13 @@ export class UsersController {
   listUsers(@Req() req: RequestWithUser, @Param('orgId') orgId: string) {
     this.allowSuperadminOrOrgAdmin(req, orgId);
     const users = this.store.getUsersByOrgId(orgId);
-    return users.map(toResponse);
+    return users.map((u) => {
+      const orgIds = u.orgIds?.length ? u.orgIds : (u.orgId ? [u.orgId] : []);
+      const orgNames = orgIds
+        .map((id) => this.store.getOrgById(id)?.name)
+        .filter((n): n is string => !!n);
+      return toResponse(u, orgNames);
+    });
   }
 
   /** Add user to org (orgadmin or superadmin) - orgadmin can add orgadmin or serviceprovider */
@@ -67,7 +85,7 @@ export class UsersController {
       bio: body.bio,
       needs: body.needs,
     });
-    return toResponse(user);
+    return toResponse(user, this.getOrgNamesForUser(user));
   }
 
   /** Update my profile (serviceprovider or any user) */
@@ -80,7 +98,7 @@ export class UsersController {
       bio: body.bio,
       needs: body.needs,
     });
-    return toResponse(updated!);
+    return toResponse(updated!, this.getOrgNamesForUser(updated!));
   }
 
   /** Get my profile */
@@ -88,6 +106,6 @@ export class UsersController {
   getMyProfile(@Req() req: RequestWithUser) {
     const user = this.store.getUserById(req.user!.id);
     if (!user) throw new ForbiddenException('User not found');
-    return toResponse(user);
+    return toResponse(user, this.getOrgNamesForUser(user));
   }
 }

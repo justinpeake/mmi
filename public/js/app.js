@@ -6,12 +6,46 @@
   var AUTH_KEY = 'mmi-auth';
   var USER_KEY = 'mmi-user';
 
+  var HELPER_ORG_ID_KEY = 'mmi-helper-org-id';
+  var HELPER_ORG_NAME_KEY = 'mmi-helper-org-name';
+
   function getToken() {
     try {
       return sessionStorage.getItem(AUTH_KEY);
     } catch (e) {
       return null;
     }
+  }
+
+  function getHelperChosenOrgId() {
+    try {
+      return sessionStorage.getItem(HELPER_ORG_ID_KEY) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function setHelperChosenOrg(id, name) {
+    try {
+      if (id) sessionStorage.setItem(HELPER_ORG_ID_KEY, id);
+      else sessionStorage.removeItem(HELPER_ORG_ID_KEY);
+      if (name !== undefined) sessionStorage.setItem(HELPER_ORG_NAME_KEY, name || '');
+    } catch (e) {}
+  }
+
+  function getHelperChosenOrgName() {
+    try {
+      return sessionStorage.getItem(HELPER_ORG_NAME_KEY) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function helperHasMultipleOrgs(user) {
+    user = user || getCurrentUser();
+    if (!user) return false;
+    var ids = user.orgIds || (user.orgId ? [user.orgId] : []);
+    return ids.length > 1;
   }
 
   function getCurrentUser() {
@@ -83,20 +117,33 @@
   function logout() {
     sessionStorage.removeItem(AUTH_KEY);
     sessionStorage.removeItem(USER_KEY);
+    try {
+      sessionStorage.removeItem(HELPER_ORG_ID_KEY);
+      sessionStorage.removeItem(HELPER_ORG_NAME_KEY);
+    } catch (e) {}
     window.location.replace('/');
   }
 
   function getDefaultPageForRole(userType) {
     if (userType === 'superadmin') return 'orgs';
     if (userType === 'orgadmin') return 'dashboard';
-    if (userType === 'serviceprovider') return 'helper-home';
+    if (userType === 'serviceprovider') {
+      var user = getCurrentUser();
+      if (helperHasMultipleOrgs(user) && !getHelperChosenOrgId()) return 'helper-choose-org';
+      if (user && !getHelperChosenOrgId()) {
+        var ids = user.orgIds || (user.orgId ? [user.orgId] : []);
+        var names = user.orgNames || [];
+        if (ids.length === 1) setHelperChosenOrg(ids[0], names[0] || '');
+      }
+      return 'helper-home';
+    }
     return 'home';
   }
 
   function isPageAllowedForRole(pageId, userType) {
     if (pageId === 'orgs' || pageId === 'org-detail' || pageId === 'settings') return userType === 'superadmin';
     if (pageId === 'home' || pageId === 'dashboard' || pageId === 'settings') return userType === 'orgadmin';
-    if (pageId === 'helper-home' || pageId === 'helper-profile') return userType === 'serviceprovider';
+    if (pageId === 'helper-home' || pageId === 'helper-profile' || pageId === 'helper-choose-org') return userType === 'serviceprovider';
     return false;
   }
 
@@ -125,11 +172,16 @@
       settings: 'Settings',
       orgs: 'Organizations',
       'org-detail': 'Organization',
+      'helper-choose-org': 'Choose organization',
       'helper-home': 'My clients',
       'helper-profile': 'Profile'
     };
 
-    var cleanViewPages = ['dashboard', 'orgs', 'org-detail', 'helper-home', 'helper-profile'];
+    if (userType === 'serviceprovider' && (pageId === 'helper-home' || pageId === 'helper-profile') && helperHasMultipleOrgs(user) && !getHelperChosenOrgId()) {
+      pageId = 'helper-choose-org';
+    }
+
+    var cleanViewPages = ['dashboard', 'orgs', 'org-detail', 'helper-choose-org', 'helper-home', 'helper-profile'];
     document.body.classList.toggle('view-dashboard', cleanViewPages.indexOf(pageId) !== -1);
 
     pages.forEach(function (p) {
@@ -145,8 +197,15 @@
 
     if (pageId === 'orgs') renderOrgsList();
     if (pageId === 'org-detail') renderOrgDetail(window.__mmiCurrentOrgId || null);
-    if (pageId === 'helper-home') renderHelperConnections();
-    if (pageId === 'helper-profile') loadHelperProfile();
+    if (pageId === 'helper-choose-org') renderHelperChooseOrg();
+    if (pageId === 'helper-home') {
+      updateHelperHeaderOrgDisplay();
+      renderHelperConnections();
+    }
+    if (pageId === 'helper-profile') {
+      updateHelperHeaderOrgDisplay();
+      loadHelperProfile();
+    }
     if (pageId === 'dashboard') {
       var u = getCurrentUser();
       if (u && u.userType === 'orgadmin' && u.orgId && typeof window.loadDashboardData === 'function') {
@@ -240,10 +299,60 @@
     });
   }
 
+  function renderHelperChooseOrg() {
+    var container = document.getElementById('helper-choose-org-list');
+    if (!container) return;
+    var user = getCurrentUser();
+    var orgIds = (user && (user.orgIds || (user.orgId ? [user.orgId] : []))) || [];
+    var orgNames = (user && user.orgNames) || [];
+    if (orgIds.length <= 1) {
+      if (orgIds.length === 1) setHelperChosenOrg(orgIds[0], orgNames[0] || '');
+      window.location.hash = 'helper-home';
+      return;
+    }
+    container.innerHTML = orgIds.map(function (id, i) {
+      var name = (orgNames[i] || 'Organization').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+      return '<article class="cc-client-card cc-org-picker-card" role="button" tabindex="0" data-helper-org-id="' + (id || '').replace(/"/g, '&quot;') + '" data-helper-org-name="' + name + '">' +
+        '<div class="cc-client-header"><div class="cc-client-info">' +
+        '<h2 class="cc-client-name">' + name + '</h2>' +
+        '</div></div>' +
+        '<p class="cc-section-subtitle" style="margin:0;">Click to work in this organization</p>' +
+        '</article>';
+    }).join('');
+    container.querySelectorAll('.cc-org-picker-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        var id = card.getAttribute('data-helper-org-id');
+        var name = card.getAttribute('data-helper-org-name') || '';
+        if (id) {
+          setHelperChosenOrg(id, name);
+          window.location.assign('/app.html#helper-home');
+        }
+      });
+    });
+  }
+
+  function updateHelperHeaderOrgDisplay() {
+    var user = getCurrentUser();
+    var multi = helperHasMultipleOrgs(user);
+    var chosenId = getHelperChosenOrgId();
+    var chosenName = getHelperChosenOrgName();
+    var el = document.getElementById('cc-helper-current-org');
+    var elProfile = document.getElementById('cc-helper-current-org-profile');
+    var nameEl = document.getElementById('cc-helper-org-name');
+    var nameElProfile = document.getElementById('cc-helper-org-name-profile');
+    var show = multi && chosenId;
+    if (el) el.hidden = !show;
+    if (elProfile) elProfile.hidden = !show;
+    if (nameEl) nameEl.textContent = chosenName || '';
+    if (nameElProfile) nameElProfile.textContent = chosenName || '';
+  }
+
   function renderHelperConnections() {
     var container = document.getElementById('helper-connections-list');
     if (!container) return;
-    apiRequest('/api/connections/me').then(function (res) {
+    var orgId = getHelperChosenOrgId();
+    var url = '/api/connections/me' + (orgId ? '?orgId=' + encodeURIComponent(orgId) : '');
+    apiRequest(url).then(function (res) {
       if (!res.ok) { container.innerHTML = '<p class="message error">Could not load your connections.</p>'; return null; }
       return res.json();
     }).then(function (list) {
@@ -1143,6 +1252,29 @@
       return nameEl ? nameEl.textContent.trim() : '';
     }
 
+    /** Update or create org badges on a helper card. orgNames: string[] from API. */
+    function updateHelperCardOrgBadges(card, orgNames) {
+      if (!card) return;
+      var badgesEl = card.querySelector('.cc-helper-org-badges');
+      if (!badgesEl) {
+        var info = card.querySelector('.cc-client-info');
+        var parent = info || card.querySelector('.cc-client-header');
+        if (!parent) return;
+        badgesEl = document.createElement('div');
+        badgesEl.className = 'cc-helper-org-badges';
+        parent.appendChild(badgesEl);
+      }
+      badgesEl.innerHTML = '';
+      var list = orgNames || [];
+      list.forEach(function (name) {
+        var span = document.createElement('span');
+        span.className = 'cc-org-badge';
+        span.textContent = name;
+        badgesEl.appendChild(span);
+      });
+      badgesEl.style.display = list.length ? '' : 'none';
+    }
+
     function updateCurrentConnectionsForHelper(helperCard) {
       var listEl = helperCard.querySelector('.cc-current-list');
       if (!listEl) return;
@@ -1163,13 +1295,16 @@
       if (!user || !user.orgId) return;
       var orgId = user.orgId;
       Promise.all([
+        apiRequest('/api/orgs/' + orgId).then(function (r) { return r.ok ? r.json() : null; }),
         apiRequest('/api/orgs/' + orgId + '/clients').then(function (r) { return r.ok ? r.json() : []; }),
         apiRequest('/api/orgs/' + orgId + '/users').then(function (r) { return r.ok ? r.json() : []; }),
         apiRequest('/api/orgs/' + orgId + '/connections').then(function (r) { return r.ok ? r.json() : []; })
       ]).then(function (results) {
-        var clients = results[0] || [];
-        var users = results[1] || [];
-        var connectionsApi = results[2] || [];
+        var org = results[0];
+        var clients = results[1] || [];
+        var users = results[2] || [];
+        var connectionsApi = results[3] || [];
+        if (org && org.name) window.__mmiCurrentOrgName = org.name;
         var helpers = users.filter(function (u) { return u.userType === 'serviceprovider'; });
         window.__mmiDashboardClients = clients;
         window.__mmiDashboardHelpers = helpers;
@@ -1196,7 +1331,10 @@
         document.querySelectorAll('#cc-panel-helpers .cc-helper-card').forEach(function (card) {
           var name = getHelperNameFromCard(card);
           var helper = helpers.filter(function (h) { return (h.displayName || '') === name; })[0];
-          if (helper) card.setAttribute('data-helper-id', helper.id);
+          if (helper) {
+            card.setAttribute('data-helper-id', helper.id);
+            updateHelperCardOrgBadges(card, helper.orgNames);
+          }
         });
         renderConnectionsPanel();
         updateCcCounts();
@@ -1401,6 +1539,7 @@
         currentWrap.appendChild(currentList);
         article.appendChild(currentWrap);
         article.setAttribute('data-is-active', 'true');
+        updateHelperCardOrgBadges(article, window.__mmiCurrentOrgName ? [window.__mmiCurrentOrgName] : []);
         helpersCardsContainer.appendChild(article);
         ccCounts.helpers += 1;
         updateCcCounts();

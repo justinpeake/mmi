@@ -78,6 +78,28 @@
             </main>
           </div>
         </div>
+        <div id="page-helper-choose-org" class="page" hidden>
+          <div class="cc-dashboard">
+            <header class="cc-header">
+              <div class="cc-brand">
+                <div class="cc-logo-row">
+                  <div class="cc-logo-icon" aria-hidden="true">♥</div>
+                  <span class="cc-logo-text">Belong IRL</span>
+                </div>
+              </div>
+              <button type="button" class="cc-logout" aria-label="Logout">Logout <span class="cc-logout-icon" aria-hidden="true">→</span></button>
+            </header>
+            <main class="cc-main">
+              <div class="cc-section-header">
+                <div>
+                  <h1 class="cc-section-title">Choose organization</h1>
+                  <p class="cc-section-subtitle">You work with more than one organization. Select which one you want to work in right now.</p>
+                </div>
+              </div>
+              <div class="cc-cards" id="helper-choose-org-list"></div>
+            </main>
+          </div>
+        </div>
         <div id="page-helper-home" class="page" hidden>
           <div class="cc-dashboard">
             <header class="cc-header">
@@ -86,6 +108,11 @@
                   <div class="cc-logo-icon" aria-hidden="true">♥</div>
                   <span class="cc-logo-text">Belong IRL</span>
                 </div>
+              </div>
+              <div class="cc-header-helper-org" id="cc-helper-current-org" hidden>
+                <span class="cc-helper-org-label">Working in:</span>
+                <span class="cc-helper-org-name" id="cc-helper-org-name"></span>
+                <a href="/app.html#helper-choose-org" class="cc-helper-switch-org" data-page="helper-choose-org">Switch organization</a>
               </div>
               <nav class="cc-header-nav" aria-label="Main">
                 <a href="/app.html#helper-home" class="cc-header-nav-link" data-page="helper-home">My clients</a>
@@ -112,6 +139,11 @@
                   <div class="cc-logo-icon" aria-hidden="true">♥</div>
                   <span class="cc-logo-text">Belong IRL</span>
                 </div>
+              </div>
+              <div class="cc-header-helper-org" id="cc-helper-current-org-profile" hidden>
+                <span class="cc-helper-org-label">Working in:</span>
+                <span class="cc-helper-org-name" id="cc-helper-org-name-profile"></span>
+                <a href="/app.html#helper-choose-org" class="cc-helper-switch-org" data-page="helper-choose-org">Switch organization</a>
               </div>
               <nav class="cc-header-nav" aria-label="Main">
                 <a href="/app.html#helper-home" class="cc-header-nav-link" data-page="helper-home">My clients</a>

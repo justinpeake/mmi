@@ -117,6 +117,40 @@
   background: rgba(124, 58, 237, 0.1);
 }
 
+/* Helper view: current org + switch */
+.cc-header-helper-org {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.cc-helper-org-label {
+  font-weight: 500;
+}
+
+.cc-helper-org-name {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.cc-helper-switch-org {
+  font-size: 0.85rem;
+  color: #7c3aed;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.cc-helper-switch-org:hover {
+  text-decoration: underline;
+}
+
+.cc-org-picker-card {
+  cursor: pointer;
+  max-width: 320px;
+}
+
 .cc-header-actions {
   display: flex;
   align-items: center;
@@ -376,6 +410,25 @@
   font-size: 0.85rem;
   color: #6b7280;
   margin: 0 0 0.5rem;
+}
+
+/* Helper card: org affiliation badges */
+.cc-helper-org-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.cc-org-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #5b21b6;
+  background: rgba(124, 58, 237, 0.12);
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
 .cc-badge {

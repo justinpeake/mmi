@@ -66,12 +66,24 @@ export class StoreService {
     };
     this.users.set(orgadmin.id, orgadmin);
 
-    // 4) Two service providers (helpers) in same org
+    // 4a) Second org (so we can have a helper in multiple orgs)
+    const org2Id = this.uuid();
+    const org2: Org = {
+      id: org2Id,
+      name: 'OtherOrg',
+      mainContactName: 'Other Contact',
+      mainContactEmail: 'other@example.org',
+      createdAt: now,
+    };
+    this.orgs.set(org2.id, org2);
+
+    // 4b) Two service providers: helper1 in both orgs, helper2 in TestOrg only
     const helper1: User = {
       id: this.uuid(),
       username: 'sarah.martinez@example.com',
       userType: 'serviceprovider',
       orgId,
+      orgIds: [orgId, org2Id],
       displayName: 'Sarah Martinez',
       bio: 'Mentors clients on employment, housing, and life skills.',
       needs: ['Employment', 'Housing', 'Life skills'],
@@ -177,7 +189,10 @@ export class StoreService {
   }
 
   getUsersByOrgId(orgId: string): User[] {
-    return Array.from(this.users.values()).filter((u) => u.orgId === orgId);
+    return Array.from(this.users.values()).filter((u) => {
+      if (u.orgIds && u.orgIds.length) return u.orgIds.includes(orgId);
+      return u.orgId === orgId;
+    });
   }
 
   addUser(user: Omit<User, 'id' | 'createdAt'>): User {

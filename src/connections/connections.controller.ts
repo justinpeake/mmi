@@ -5,6 +5,7 @@ import {
   Patch,
   Body,
   Param,
+  Query,
   Req,
   UseGuards,
   ForbiddenException,
@@ -25,13 +26,16 @@ export class ConnectionsController {
     throw new ForbiddenException('Not allowed to access this org');
   }
 
-  /** Get my connections (serviceprovider: active + pending for me) - MUST be before orgs/:orgId/connections */
+  /** Get my connections (serviceprovider: active + pending for me). Optional orgId filters to that org. */
   @Get('connections/me')
-  myConnections(@Req() req: RequestWithUser) {
+  myConnections(@Req() req: RequestWithUser, @Query('orgId') orgId?: string) {
     if (req.user?.userType !== 'serviceprovider') {
       throw new ForbiddenException('Service providers only');
     }
-    const list = this.store.getConnectionsByHelperId(req.user!.id);
+    let list = this.store.getConnectionsByHelperId(req.user!.id);
+    if (orgId && orgId.trim()) {
+      list = list.filter((c) => c.orgId === orgId.trim());
+    }
     return list.map((c) => ({
       ...c,
       client: this.store.getClientById(c.clientId),
