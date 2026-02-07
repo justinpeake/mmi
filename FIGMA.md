@@ -4,8 +4,8 @@ This app is wired to the **MMI** Figma file. Use the **user-Figma** MCP in Curso
 
 ## Design files
 
-- **MMI Login (Belonging):** [MMI-Login on Figma](https://www.figma.com/design/8yGQMV0q1Yg0XoNAQnFTEd/MMI-Login?t=zo59mquEiT3ZRmMO-0) — file key: `8yGQMV0q1Yg0XoNAQnFTEd`, nodeId: `0:1` — **implemented** in `public/index.html` and `public/css/login.css`
-- **Dashboard (Belonging):** [Untitled / Belonging](https://www.figma.com/design/VywQr6kXMi3hPy2Gg76Ntx/Untitled?node-id=0-1) — file key: `VywQr6kXMi3hPy2Gg76Ntx`, nodeId: `0:1` — **implemented** in `public/app.html` (#page-dashboard) and `public/css/dashboard.css`
+- **MMI Login (Belong IRL):** [MMI-Login on Figma](https://www.figma.com/design/8yGQMV0q1Yg0XoNAQnFTEd/MMI-Login?t=zo59mquEiT3ZRmMO-0) — file key: `8yGQMV0q1Yg0XoNAQnFTEd`, nodeId: `0:1` — **implemented** in `public/index.html` and `public/css/login.css`
+- **Dashboard (Belong IRL):** [Untitled / Belong IRL](https://www.figma.com/design/VywQr6kXMi3hPy2Gg76Ntx/Untitled?node-id=0-1) — file key: `VywQr6kXMi3hPy2Gg76Ntx`, nodeId: `0:1` — **implemented** in `public/app.html` (#page-dashboard) and `public/css/dashboard.css`
 - **MMI (app / Community Helpers):** [MMI on Figma](https://www.figma.com/make/3lxU3TJjw61ENJyjDuKL1k/MMI?t=zo59mquEiT3ZRmMO-0&preview-route=%2Fdashboard) — file key: `3lxU3TJjw61ENJyjDuKL1k` — **Community Helpers** tab content in `#cc-panel-helpers`
 - **Connection card:** [Untitled (connection card) on Figma](https://www.figma.com/design/D9qRk4jvNETxDc55TaQGJc/Untitled?node-id=0-1) — file key: `D9qRk4jvNETxDc55TaQGJc`, nodeId: `0:1` — **implemented** in `#cc-panel-connections`, `.cc-connection-card`, dynamic tab counts
 
@@ -47,8 +47,8 @@ Example:
 
 ## Implemented screens
 
-- **Login** — Built from [MMI-Login Figma](https://www.figma.com/design/8yGQMV0q1Yg0XoNAQnFTEd/MMI-Login) (fileKey: `8yGQMV0q1Yg0XoNAQnFTEd`, nodeId: `0:1`). Layout: light blue-grey background, white card, purple circular logo (person icon), "Belonging" title, "Connecting clients with community helpers" tagline, Email Address and Password fields, Sign In button, "Don't have an account? Sign Up" link. See `public/index.html` and `public/css/login.css`.
-- **Dashboard** — Built from [Belonging Figma](https://www.figma.com/design/VywQr6kXMi3hPy2Gg76Ntx/Untitled?node-id=0-1) (fileKey: `VywQr6kXMi3hPy2Gg76Ntx`, nodeId: `0:1`). Layout: Belonging header, "Clients Seeking Help" section, three client cards. See `public/css/dashboard.css` and `#page-dashboard` in `public/app.html`.
+- **Login** — Built from [MMI-Login Figma](https://www.figma.com/design/8yGQMV0q1Yg0XoNAQnFTEd/MMI-Login) (fileKey: `8yGQMV0q1Yg0XoNAQnFTEd`, nodeId: `0:1`). Layout: light blue-grey background, white card, purple circular logo (person icon), "Belong IRL" title, "Connecting clients with community helpers" tagline, Email Address and Password fields, Sign In button, "Don't have an account? Sign Up" link. See `public/index.html` and `public/css/login.css`.
+- **Dashboard** — Built from [Belong IRL Figma](https://www.figma.com/design/VywQr6kXMi3hPy2Gg76Ntx/Untitled?node-id=0-1) (fileKey: `VywQr6kXMi3hPy2Gg76Ntx`, nodeId: `0:1`). Layout: Belong IRL header, "Clients Seeking Help" section, three client cards. See `public/css/dashboard.css` and `#page-dashboard` in `public/app.html`.
 - **Community Helpers** — Design source: [MMI Figma (dashboard preview)](https://www.figma.com/make/3lxU3TJjw61ENJyjDuKL1k/MMI?t=zo59mquEiT3ZRmMO-0&preview-route=%2Fdashboard) (fileKey: `3lxU3TJjw61ENJyjDuKL1k`). Implemented as tab content in the same dashboard: "Community Helpers" section with four helper cards. See `#cc-panel-helpers` in `public/app.html`.
 - **Connection card** — Built from [Untitled / Connection card Figma](https://www.figma.com/design/D9qRk4jvNETxDc55TaQGJc/Untitled?node-id=0-1) (fileKey: `D9qRk4jvNETxDc55TaQGJc`, nodeId: `0:1`). Layout: card with purple chain icon + "Connection" label, green "Active" badge, calendar icon + "Connected 2026-01-15", Client field (Margaret Thompson), chain icon, Helper field (Sarah Martinez), red "Disconnect" button. Tab numbers (Clients 3, Community Helpers 4, Connections 1) are dynamic and updated via `ccCounts` and `updateCcCounts()` in `public/js/app.js`. See `#cc-panel-connections`, `.cc-connection-card`, and `public/css/dashboard.css`.
 
