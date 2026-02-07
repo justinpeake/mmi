@@ -113,6 +113,61 @@
       }
     ];
 
+    /** Extended client data model – persisted in localStorage keyed by client name */
+    var CLIENT_STORAGE_KEY = 'cc-clients';
+
+    function getDefaultClientFields() {
+      return {
+        name: '',
+        age: '',
+        address: '',
+        contact: '',
+        charge: '',
+        atiPlan: '',
+        needs: [],
+        story: '',
+        socialMedia: '',
+        certifications: '',
+        photo: '',
+        notes: '',
+        advocateContact: '',
+        engagementHistory: [],
+        media: []
+      };
+    }
+
+    function getClientsStore() {
+      try {
+        var raw = localStorage.getItem(CLIENT_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function setClientsStore(store) {
+      try {
+        localStorage.setItem(CLIENT_STORAGE_KEY, JSON.stringify(store));
+      } catch (e) {}
+    }
+
+    function getClientByName(name) {
+      var store = getClientsStore();
+      return store[name] || null;
+    }
+
+    function setClient(name, data) {
+      var store = getClientsStore();
+      store[name] = data;
+      setClientsStore(store);
+    }
+
+    function removeClientFromStore(name) {
+      var store = getClientsStore();
+      delete store[name];
+      setClientsStore(store);
+    }
+
     function updateCcCounts() {
       var clientsEl = document.getElementById('cc-count-clients');
       var helpersEl = document.getElementById('cc-count-helpers');
@@ -173,7 +228,14 @@
         var needsText = (needsInput && needsInput.value.trim()) || '';
         var needsList = needsText ? needsText.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
 
-        var avatarUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&size=112&background=e9d5ff&color=6d28d9';
+        var clientData = getDefaultClientFields();
+        clientData.name = name;
+        clientData.age = age;
+        clientData.story = bio;
+        clientData.needs = needsList;
+        setClient(name, clientData);
+
+        var avatarUrl = (clientData.photo && clientData.photo.trim()) ? clientData.photo.trim() : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&size=112&background=e9d5ff&color=6d28d9';
 
         var article = document.createElement('article');
         article.className = 'cc-client-card';
@@ -251,11 +313,17 @@
     var overlayClientDetail = document.getElementById('cc-modal-client-detail-overlay');
     var btnCloseClientDetail = document.getElementById('cc-modal-client-detail-close');
     var btnRemoveClient = document.getElementById('cc-client-detail-remove');
-    var detailName = document.getElementById('cc-detail-name');
-    var detailAge = document.getElementById('cc-detail-age');
-    var detailBio = document.getElementById('cc-detail-bio');
-    var detailNeeds = document.getElementById('cc-detail-needs');
+    var clientDetailView = document.getElementById('cc-client-detail-view');
+    var clientDetailEdit = document.getElementById('cc-client-detail-edit');
+    var btnEdit = document.getElementById('cc-client-detail-edit-btn');
+    var btnSave = document.getElementById('cc-client-detail-save-btn');
+    var btnCancelEdit = document.getElementById('cc-client-detail-cancel-edit-btn');
+    var editMediaList = document.getElementById('cc-edit-media-list');
+    var editEngagementList = document.getElementById('cc-edit-engagement-list');
+    var editMediaAdd = document.getElementById('cc-edit-media-add');
+    var editEngagementAdd = document.getElementById('cc-edit-engagement-add');
     var currentClientCard = null;
+    var currentClientData = null;
 
     function getClientDataFromCard(card) {
       var nameEl = card.querySelector('.cc-client-name');
@@ -263,38 +331,316 @@
       var bioEl = card.querySelector('.cc-client-bio');
       var tagEls = card.querySelectorAll('.cc-tags .cc-tag');
       var needs = [];
-      for (var i = 0; i < tagEls.length; i++) needs.push(tagEls[i].textContent);
+      for (var i = 0; i < tagEls.length; i++) needs.push(tagEls[i].textContent.trim());
       return {
-        name: nameEl ? nameEl.textContent : '',
-        age: ageEl ? ageEl.textContent : '',
-        bio: bioEl ? bioEl.textContent : '',
+        name: nameEl ? nameEl.textContent.trim() : '',
+        age: ageEl ? ageEl.textContent.trim() : '',
+        story: bioEl ? bioEl.textContent.trim() : '',
         needs: needs
       };
     }
 
-    function openClientDetailModal(card) {
-      currentClientCard = card;
-      var data = getClientDataFromCard(card);
-      if (detailName) detailName.textContent = data.name || '';
-      if (detailAge) detailAge.textContent = data.age || '';
-      if (detailBio) detailBio.textContent = data.bio || '';
-      if (detailNeeds) {
-        detailNeeds.innerHTML = '';
-        data.needs.forEach(function (tag) {
+    function getFullClientForModal(card) {
+      var fromCard = getClientDataFromCard(card);
+      var stored = fromCard.name ? getClientByName(fromCard.name) : null;
+      var base = stored ? Object.assign({}, getDefaultClientFields(), stored) : Object.assign({}, getDefaultClientFields(), fromCard);
+      if (!base.engagementHistory || !Array.isArray(base.engagementHistory)) base.engagementHistory = [];
+      if (!base.media || !Array.isArray(base.media)) base.media = [];
+      return base;
+    }
+
+    function setViewText(id, text) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = text || '';
+    }
+
+    function setViewPhoto(url) {
+      var el = document.getElementById('cc-detail-photo');
+      if (!el) return;
+      el.innerHTML = '';
+      if (url && url.trim()) {
+        var img = document.createElement('img');
+        img.src = url.trim();
+        img.alt = 'Client photo';
+        img.onerror = function () { el.textContent = url; };
+        el.appendChild(img);
+      }
+    }
+
+    function populateView(client) {
+      setViewText('cc-detail-name', client.name);
+      setViewText('cc-detail-age', client.age);
+      setViewText('cc-detail-address', client.address);
+      setViewText('cc-detail-contact', client.contact);
+      setViewPhoto(client.photo);
+      setViewText('cc-detail-charge', client.charge);
+      setViewText('cc-detail-ati-plan', client.atiPlan);
+      setViewText('cc-detail-story', client.story);
+      setViewText('cc-detail-certifications', client.certifications);
+      setViewText('cc-detail-social-media', client.socialMedia);
+      setViewText('cc-detail-advocate', client.advocateContact);
+      setViewText('cc-detail-notes', client.notes);
+      var needsEl = document.getElementById('cc-detail-needs');
+      if (needsEl) {
+        needsEl.innerHTML = '';
+        (client.needs || []).forEach(function (tag) {
           var span = document.createElement('span');
           span.className = 'cc-tag';
           span.textContent = tag;
-          detailNeeds.appendChild(span);
+          needsEl.appendChild(span);
         });
       }
+      var mediaEl = document.getElementById('cc-detail-media-list');
+      if (mediaEl) {
+        mediaEl.innerHTML = '';
+        (client.media || []).forEach(function (item) {
+          var p = document.createElement('p');
+          p.className = 'cc-client-detail-value';
+          p.style.marginBottom = '0.35rem';
+          var type = (item.type || 'video').toLowerCase();
+          var label = item.label || item.url || '';
+          p.textContent = (type === 'audio' ? 'Audio: ' : 'Video: ') + (label || item.url || '');
+          mediaEl.appendChild(p);
+        });
+      }
+      var engEl = document.getElementById('cc-detail-engagement-list');
+      if (engEl) {
+        engEl.innerHTML = '';
+        (client.engagementHistory || []).forEach(function (entry) {
+          var div = document.createElement('div');
+          div.className = 'cc-client-detail-engagement-item';
+          div.style.marginBottom = '0.75rem';
+          var withWhom = (entry.withWhom || '').trim();
+          var how = (entry.how || '').trim();
+          var when = (entry.when || '').trim();
+          var notes = (entry.notes || '').trim();
+          div.textContent = [withWhom && ('With: ' + withWhom), when && ('When: ' + when), how && ('How: ' + how), notes].filter(Boolean).join(' · ');
+          if (!div.textContent) div.textContent = '—';
+          engEl.appendChild(div);
+        });
+        if ((client.engagementHistory || []).length === 0) engEl.innerHTML = '<p class="cc-client-detail-value" style="margin:0">—</p>';
+      }
+    }
+
+    function setEditValue(id, value) {
+      var el = document.getElementById(id);
+      if (el) el.value = value != null ? value : '';
+    }
+
+    function renderEditMediaList(media) {
+      if (!editMediaList) return;
+      editMediaList.innerHTML = '';
+      (media || []).forEach(function (item, i) {
+        var row = document.createElement('div');
+        row.className = 'cc-edit-list-item';
+        row.innerHTML = '<input type="text" placeholder="URL" data-media-url value="' + (item.url || '').replace(/"/g, '&quot;') + '">' +
+          '<select data-media-type><option value="video"' + (item.type === 'audio' ? '' : ' selected') + '>Video</option><option value="audio"' + (item.type === 'audio' ? ' selected' : '') + '>Audio</option></select>' +
+          '<button type="button" class="cc-btn-remove-inline" data-remove-media>Remove</button>';
+        var urlInput = row.querySelector('[data-media-url]');
+        var typeSelect = row.querySelector('[data-media-type]');
+        if (typeSelect) typeSelect.value = item.type === 'audio' ? 'audio' : 'video';
+        row.querySelector('[data-remove-media]').addEventListener('click', function () { row.remove(); });
+        editMediaList.appendChild(row);
+      });
+    }
+
+    function renderEditEngagementList(history) {
+      if (!editEngagementList) return;
+      editEngagementList.innerHTML = '';
+      (history || []).forEach(function (entry) {
+        var row = document.createElement('div');
+        row.className = 'cc-edit-list-item';
+        row.innerHTML = '<input type="text" placeholder="With whom" data-eng-with>' +
+          '<input type="text" placeholder="How" data-eng-how>' +
+          '<input type="text" placeholder="When" data-eng-when>' +
+          '<input type="text" placeholder="Notes" data-eng-notes>' +
+          '<button type="button" class="cc-btn-remove-inline" data-remove-eng>Remove</button>';
+        row.querySelector('[data-eng-with]').value = entry.withWhom || '';
+        row.querySelector('[data-eng-how]').value = entry.how || '';
+        row.querySelector('[data-eng-when]').value = entry.when || '';
+        row.querySelector('[data-eng-notes]').value = entry.notes || '';
+        row.querySelector('[data-remove-eng]').addEventListener('click', function () { row.remove(); });
+        editEngagementList.appendChild(row);
+      });
+    }
+
+    function populateEdit(client) {
+      setEditValue('cc-edit-name', client.name);
+      setEditValue('cc-edit-age', client.age);
+      setEditValue('cc-edit-address', client.address);
+      setEditValue('cc-edit-contact', client.contact);
+      setEditValue('cc-edit-photo', client.photo);
+      setEditValue('cc-edit-charge', client.charge);
+      setEditValue('cc-edit-ati-plan', client.atiPlan);
+      setEditValue('cc-edit-story', client.story);
+      setEditValue('cc-edit-needs', (client.needs || []).join(', '));
+      setEditValue('cc-edit-certifications', client.certifications);
+      setEditValue('cc-edit-social-media', client.socialMedia);
+      setEditValue('cc-edit-advocate', client.advocateContact);
+      setEditValue('cc-edit-notes', client.notes);
+      renderEditMediaList(client.media);
+      renderEditEngagementList(client.engagementHistory);
+    }
+
+    function readEditForm() {
+      var needsText = (document.getElementById('cc-edit-needs') && document.getElementById('cc-edit-needs').value) || '';
+      var needsList = needsText ? needsText.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+      var media = [];
+      if (editMediaList) {
+        var rows = editMediaList.querySelectorAll('.cc-edit-list-item');
+        for (var i = 0; i < rows.length; i++) {
+          var urlIn = rows[i].querySelector('[data-media-url]');
+          var typeSel = rows[i].querySelector('[data-media-type]');
+          var url = urlIn && urlIn.value ? urlIn.value.trim() : '';
+          if (url) media.push({ url: url, type: typeSel && typeSel.value === 'audio' ? 'audio' : 'video' });
+        }
+      }
+      var engagementHistory = [];
+      if (editEngagementList) {
+        var engRows = editEngagementList.querySelectorAll('.cc-edit-list-item');
+        for (var j = 0; j < engRows.length; j++) {
+          var r = engRows[j];
+          engagementHistory.push({
+            withWhom: (r.querySelector('[data-eng-with]') && r.querySelector('[data-eng-with]').value) || '',
+            how: (r.querySelector('[data-eng-how]') && r.querySelector('[data-eng-how]').value) || '',
+            when: (r.querySelector('[data-eng-when]') && r.querySelector('[data-eng-when]').value) || '',
+            notes: (r.querySelector('[data-eng-notes]') && r.querySelector('[data-eng-notes]').value) || ''
+          });
+        }
+      }
+      return {
+        name: (document.getElementById('cc-edit-name') && document.getElementById('cc-edit-name').value) || '',
+        age: (document.getElementById('cc-edit-age') && document.getElementById('cc-edit-age').value) || '',
+        address: (document.getElementById('cc-edit-address') && document.getElementById('cc-edit-address').value) || '',
+        contact: (document.getElementById('cc-edit-contact') && document.getElementById('cc-edit-contact').value) || '',
+        charge: (document.getElementById('cc-edit-charge') && document.getElementById('cc-edit-charge').value) || '',
+        atiPlan: (document.getElementById('cc-edit-ati-plan') && document.getElementById('cc-edit-ati-plan').value) || '',
+        story: (document.getElementById('cc-edit-story') && document.getElementById('cc-edit-story').value) || '',
+        needs: needsList,
+        certifications: (document.getElementById('cc-edit-certifications') && document.getElementById('cc-edit-certifications').value) || '',
+        socialMedia: (document.getElementById('cc-edit-social-media') && document.getElementById('cc-edit-social-media').value) || '',
+        photo: (document.getElementById('cc-edit-photo') && document.getElementById('cc-edit-photo').value) || '',
+        notes: (document.getElementById('cc-edit-notes') && document.getElementById('cc-edit-notes').value) || '',
+        advocateContact: (document.getElementById('cc-edit-advocate') && document.getElementById('cc-edit-advocate').value) || '',
+        engagementHistory: engagementHistory,
+        media: media
+      };
+    }
+
+    function showClientDetailViewMode() {
+      if (clientDetailView) clientDetailView.hidden = false;
+      if (clientDetailEdit) clientDetailEdit.hidden = true;
+      if (btnEdit) btnEdit.hidden = false;
+      if (btnSave) btnSave.hidden = true;
+      if (btnCancelEdit) btnCancelEdit.hidden = true;
+    }
+
+    function showClientDetailEditMode() {
+      if (clientDetailView) clientDetailView.hidden = true;
+      if (clientDetailEdit) clientDetailEdit.hidden = false;
+      if (btnEdit) btnEdit.hidden = true;
+      if (btnSave) btnSave.hidden = false;
+      if (btnCancelEdit) btnCancelEdit.hidden = false;
+    }
+
+    function updateCardFromClient(card, client) {
+      var nameEl = card.querySelector('.cc-client-name');
+      var ageEl = card.querySelector('.cc-client-age');
+      var bioEl = card.querySelector('.cc-client-bio');
+      var tagsDiv = card.querySelector('.cc-tags');
+      var imgEl = card.querySelector('.cc-client-avatar');
+      if (nameEl) nameEl.textContent = client.name || '';
+      if (ageEl) ageEl.textContent = client.age || '';
+      if (bioEl) bioEl.textContent = client.story || '';
+      if (tagsDiv) {
+        tagsDiv.innerHTML = '';
+        (client.needs || []).forEach(function (tag) {
+          var span = document.createElement('span');
+          span.className = 'cc-tag';
+          span.textContent = tag;
+          tagsDiv.appendChild(span);
+        });
+      }
+      if (imgEl) {
+        imgEl.src = (client.photo && client.photo.trim()) ? client.photo.trim() : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(client.name || '') + '&size=112&background=e9d5ff&color=6d28d9';
+      }
+    }
+
+    function openClientDetailModal(card) {
+      currentClientCard = card;
+      currentClientData = getFullClientForModal(card);
+      populateView(currentClientData);
+      populateEdit(currentClientData);
+      showClientDetailViewMode();
       if (modalClientDetail) modalClientDetail.hidden = false;
     }
 
     function closeClientDetailModal() {
       if (modalClientDetail) modalClientDetail.hidden = true;
       currentClientCard = null;
+      currentClientData = null;
+      showClientDetailViewMode();
       hideRemoveConfirm();
     }
+
+    if (btnEdit) btnEdit.addEventListener('click', function () { showClientDetailEditMode(); });
+
+    if (btnCancelEdit) btnCancelEdit.addEventListener('click', function () {
+      if (currentClientData) populateEdit(currentClientData);
+      showClientDetailViewMode();
+    });
+
+    if (btnSave) btnSave.addEventListener('click', function () {
+      var next = readEditForm();
+      if (!next.name || !currentClientCard) return;
+      var oldName = currentClientData && currentClientData.name ? currentClientData.name : '';
+      if (oldName) removeClientFromStore(oldName);
+      setClient(next.name, next);
+      currentClientData = next;
+      updateCardFromClient(currentClientCard, next);
+      if (oldName && oldName !== next.name) {
+        for (var i = 0; i < connectionsList.length; i++) {
+          if (connectionsList[i].clientName === oldName) connectionsList[i].clientName = next.name;
+        }
+        renderConnectionsPanel();
+        updateSuggestedConnectionsForAllClients();
+        updateCurrentConnectionsForAllHelpers();
+      }
+      populateView(next);
+      showClientDetailViewMode();
+    });
+
+    if (editMediaAdd) editMediaAdd.addEventListener('click', function () {
+      var existing = [];
+      if (editMediaList) {
+        var rows = editMediaList.querySelectorAll('.cc-edit-list-item');
+        for (var i = 0; i < rows.length; i++) {
+          var urlIn = rows[i].querySelector('[data-media-url]');
+          var typeSel = rows[i].querySelector('[data-media-type]');
+          existing.push({ url: urlIn && urlIn.value ? urlIn.value.trim() : '', type: typeSel && typeSel.value === 'audio' ? 'audio' : 'video' });
+        }
+      }
+      existing.push({ url: '', type: 'video' });
+      renderEditMediaList(existing);
+    });
+
+    if (editEngagementAdd) editEngagementAdd.addEventListener('click', function () {
+      var existing = [];
+      if (editEngagementList) {
+        var engRows = editEngagementList.querySelectorAll('.cc-edit-list-item');
+        for (var i = 0; i < engRows.length; i++) {
+          var r = engRows[i];
+          existing.push({
+            withWhom: (r.querySelector('[data-eng-with]') && r.querySelector('[data-eng-with]').value) || '',
+            how: (r.querySelector('[data-eng-how]') && r.querySelector('[data-eng-how]').value) || '',
+            when: (r.querySelector('[data-eng-when]') && r.querySelector('[data-eng-when]').value) || '',
+            notes: (r.querySelector('[data-eng-notes]') && r.querySelector('[data-eng-notes]').value) || ''
+          });
+        }
+      }
+      existing.push({ withWhom: '', how: '', when: '', notes: '' });
+      renderEditEngagementList(existing);
+    });
 
     function getClientTagsFromCard(card) {
       var tagEls = card.querySelectorAll('.cc-needs-label + .cc-tags .cc-tag');
@@ -571,7 +917,9 @@
 
     function doRemoveClient() {
       if (!currentClientCard) return;
+      var name = getClientNameFromCard(currentClientCard);
       currentClientCard.remove();
+      if (name) removeClientFromStore(name);
       ccCounts.clients = Math.max(0, ccCounts.clients - 1);
       updateCcCounts();
       hideRemoveConfirm();

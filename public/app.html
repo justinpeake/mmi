@@ -350,23 +350,91 @@
   <div id="cc-modal-client-detail" class="cc-modal" role="dialog" aria-labelledby="cc-modal-client-detail-title" aria-modal="true" hidden>
     <div class="cc-modal-overlay" id="cc-modal-client-detail-overlay"></div>
     <div class="cc-modal-card cc-modal-client-detail-card">
-      <h2 id="cc-modal-client-detail-title" class="cc-modal-title">Client details</h2>
-      <div class="cc-client-detail-body">
-        <div class="cc-client-detail-field">
-          <span class="cc-client-detail-label">Name</span>
-          <p id="cc-detail-name" class="cc-client-detail-value"></p>
+      <div class="cc-modal-client-detail-header">
+        <h2 id="cc-modal-client-detail-title" class="cc-modal-title">Client profile</h2>
+        <div class="cc-modal-client-detail-header-actions">
+          <button type="button" class="cc-btn-edit" id="cc-client-detail-edit-btn">Edit</button>
+          <button type="button" class="cc-btn-save" id="cc-client-detail-save-btn" hidden>Save</button>
+          <button type="button" class="cc-btn-cancel" id="cc-client-detail-cancel-edit-btn" hidden>Cancel</button>
         </div>
-        <div class="cc-client-detail-field">
-          <span class="cc-client-detail-label">Age</span>
-          <p id="cc-detail-age" class="cc-client-detail-value"></p>
+      </div>
+      <div class="cc-client-detail-scroll">
+        <!-- View mode -->
+        <div id="cc-client-detail-view" class="cc-client-detail-view">
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">Basic info</h3>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Name</span><p id="cc-detail-name" class="cc-client-detail-value"></p></div>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Age</span><p id="cc-detail-age" class="cc-client-detail-value"></p></div>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Address / Hometown</span><p id="cc-detail-address" class="cc-client-detail-value"></p></div>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Contact</span><p id="cc-detail-contact" class="cc-client-detail-value"></p></div>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Photo</span><p id="cc-detail-photo" class="cc-client-detail-value cc-client-detail-photo-view"></p></div>
+          </section>
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">Legal & plan</h3>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Charge</span><p id="cc-detail-charge" class="cc-client-detail-value"></p></div>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Alternative to Incarceration Plan</span><p id="cc-detail-ati-plan" class="cc-client-detail-value"></p></div>
+          </section>
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">Story & services</h3>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Story / Biography</span><p id="cc-detail-story" class="cc-client-detail-value"></p></div>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Tags for service</span><div id="cc-detail-needs" class="cc-client-detail-tags"></div></div>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Certifications</span><p id="cc-detail-certifications" class="cc-client-detail-value"></p></div>
+          </section>
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">Social & media</h3>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Social Media</span><p id="cc-detail-social-media" class="cc-client-detail-value"></p></div>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Media (video/audio – client’s story)</span><div id="cc-detail-media-list" class="cc-client-detail-value"></div></div>
+          </section>
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">Advocacy & notes</h3>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Client Advocate / contact</span><p id="cc-detail-advocate" class="cc-client-detail-value"></p></div>
+            <div class="cc-client-detail-field"><span class="cc-client-detail-label">Notes</span><p id="cc-detail-notes" class="cc-client-detail-value"></p></div>
+          </section>
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">History of engagement</h3>
+            <div id="cc-detail-engagement-list" class="cc-client-detail-engagement-list"></div>
+          </section>
         </div>
-        <div class="cc-client-detail-field">
-          <span class="cc-client-detail-label">Bio</span>
-          <p id="cc-detail-bio" class="cc-client-detail-value"></p>
-        </div>
-        <div class="cc-client-detail-field">
-          <span class="cc-client-detail-label">Needs help with</span>
-          <div id="cc-detail-needs" class="cc-client-detail-tags"></div>
+        <!-- Edit mode -->
+        <div id="cc-client-detail-edit" class="cc-client-detail-edit" hidden>
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">Basic info</h3>
+            <div class="cc-form-group"><label for="cc-edit-name">Name</label><input type="text" id="cc-edit-name" placeholder="Full name"></div>
+            <div class="cc-form-group"><label for="cc-edit-age">Age</label><input type="text" id="cc-edit-age" placeholder="e.g. 78 years old"></div>
+            <div class="cc-form-group"><label for="cc-edit-address">Address / Hometown</label><input type="text" id="cc-edit-address" placeholder="Address or hometown"></div>
+            <div class="cc-form-group"><label for="cc-edit-contact">Contact</label><input type="text" id="cc-edit-contact" placeholder="Phone, email"></div>
+            <div class="cc-form-group"><label for="cc-edit-photo">Photo URL</label><input type="text" id="cc-edit-photo" placeholder="Image URL"></div>
+          </section>
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">Legal & plan</h3>
+            <div class="cc-form-group"><label for="cc-edit-charge">Charge</label><input type="text" id="cc-edit-charge" placeholder="Charge description"></div>
+            <div class="cc-form-group"><label for="cc-edit-ati-plan">Alternative to Incarceration Plan</label><textarea id="cc-edit-ati-plan" rows="3" placeholder="Plan details"></textarea></div>
+          </section>
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">Story & services</h3>
+            <div class="cc-form-group"><label for="cc-edit-story">Story / Biography</label><textarea id="cc-edit-story" rows="4" placeholder="Client’s story or bio"></textarea></div>
+            <div class="cc-form-group"><label for="cc-edit-needs">Tags for service (comma-separated)</label><input type="text" id="cc-edit-needs" placeholder="e.g. Grocery Shopping, Transportation"></div>
+            <div class="cc-form-group"><label for="cc-edit-certifications">Certifications</label><textarea id="cc-edit-certifications" rows="2" placeholder="Certifications"></textarea></div>
+          </section>
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">Social & media</h3>
+            <div class="cc-form-group"><label for="cc-edit-social-media">Social Media</label><textarea id="cc-edit-social-media" rows="2" placeholder="Links or handles"></textarea></div>
+            <div class="cc-form-group">
+              <label>Media (video/audio – client’s story)</label>
+              <div id="cc-edit-media-list" class="cc-edit-list"></div>
+              <button type="button" class="cc-btn-add-inline" id="cc-edit-media-add">+ Add media link</button>
+            </div>
+          </section>
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">Advocacy & notes</h3>
+            <div class="cc-form-group"><label for="cc-edit-advocate">Client Advocate / contact</label><input type="text" id="cc-edit-advocate" placeholder="Name and contact"></div>
+            <div class="cc-form-group"><label for="cc-edit-notes">Notes</label><textarea id="cc-edit-notes" rows="3" placeholder="Notes"></textarea></div>
+          </section>
+          <section class="cc-client-detail-section">
+            <h3 class="cc-client-detail-section-title">History of engagement</h3>
+            <div id="cc-edit-engagement-list" class="cc-edit-list"></div>
+            <button type="button" class="cc-btn-add-inline" id="cc-edit-engagement-add">+ Add engagement</button>
+          </section>
         </div>
       </div>
       <div class="cc-remove-confirm" id="cc-remove-confirm" hidden>

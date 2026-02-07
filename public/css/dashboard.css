@@ -1090,6 +1090,169 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }
 
+/* Client profile modal – larger, scrollable (only for client detail, not helper detail) */
+#cc-modal-client-detail .cc-modal-card {
+  max-width: min(920px, 92vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.cc-modal-client-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.cc-modal-client-detail-header .cc-modal-title {
+  margin: 0;
+}
+
+.cc-modal-client-detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cc-btn-edit {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #7c3aed;
+  background: #fff;
+  border: 1px solid #7c3aed;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+
+.cc-btn-edit:hover {
+  background: #f5f3ff;
+}
+
+.cc-btn-save {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  background: #7c3aed;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.cc-btn-save:hover {
+  background: #6d28d9;
+}
+
+.cc-client-detail-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+}
+
+.cc-client-detail-section {
+  margin-bottom: 1.5rem;
+}
+
+.cc-client-detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.cc-client-detail-section-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.cc-client-detail-view .cc-client-detail-field,
+.cc-client-detail-edit .cc-form-group {
+  margin-bottom: 0.85rem;
+}
+
+.cc-client-detail-view .cc-client-detail-field:last-child,
+.cc-client-detail-edit .cc-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.cc-client-detail-photo-view img {
+  max-width: 120px;
+  max-height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.cc-client-detail-engagement-list,
+.cc-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cc-edit-list-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-start;
+  padding: 0.5rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.cc-edit-list-item input,
+.cc-edit-list-item textarea,
+.cc-edit-list-item select {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.cc-edit-list-item .cc-btn-remove-inline {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cc-edit-list-item .cc-btn-remove-inline:hover {
+  color: #dc2626;
+}
+
+.cc-btn-add-inline {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #7c3aed;
+  background: #f5f3ff;
+  border: 1px dashed #7c3aed;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.cc-btn-add-inline:hover {
+  background: #ede9fe;
+}
+
 .cc-connection-detail-card .cc-connection-detail-content {
   margin-bottom: 1.25rem;
 }
