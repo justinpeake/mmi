@@ -61,6 +61,24 @@ export interface Connection {
   declinedAt?: string;   // when helper declined
 }
 
+export type ConnectionUpdateMediaType = 'video' | 'image' | 'audio';
+
+export interface ConnectionUpdateMediaItem {
+  url: string;
+  type: ConnectionUpdateMediaType;
+}
+
+export interface ConnectionUpdate {
+  id: string;
+  connectionId: string;
+  eventName: string;
+  eventTime: string;     // ISO
+  notes?: string;
+  media?: ConnectionUpdateMediaItem[];
+  createdBy: string;     // helperId
+  createdAt: string;     // ISO
+}
+
 /** For API responses: user without internal fields if needed */
 export interface UserResponse {
   id: string;

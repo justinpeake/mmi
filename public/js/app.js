@@ -701,6 +701,7 @@
     var editEngagementAdd = document.getElementById('cc-edit-engagement-add');
     var currentClientCard = null;
     var currentClientData = null;
+    var currentHelperConnectionId = null;
 
     function getClientDataFromCard(card) {
       var nameEl = card.querySelector('.cc-client-name');
@@ -958,11 +959,12 @@
       if (modalClientDetail) modalClientDetail.hidden = false;
     }
 
-    /** Open client profile in read-only mode (e.g. from helper "My clients" view). clientData: { name, age, bio, needs } from API. */
-    function openClientDetailModalReadOnly(clientData) {
+    /** Open client profile in read-only mode (e.g. from helper "My clients" view). clientData: { name, age, bio, needs } from API. connectionId: optional; when set, show "View connection & add update" for helper. */
+    function openClientDetailModalReadOnly(clientData, connectionId) {
       if (!clientData) return;
       currentClientCard = null;
       currentClientData = null;
+      currentHelperConnectionId = connectionId || null;
       var viewData = {
         name: clientData.name,
         age: clientData.age,
@@ -982,13 +984,97 @@
       showClientDetailViewMode();
       if (clientDetailHeaderActions) clientDetailHeaderActions.style.display = 'none';
       if (btnRemoveClient) btnRemoveClient.style.display = 'none';
+      var viewConnectionBtn = document.getElementById('cc-client-detail-view-connection-btn');
+      if (viewConnectionBtn) {
+        viewConnectionBtn.hidden = !currentHelperConnectionId;
+      }
+      var myConnectionEl = document.getElementById('cc-client-detail-my-connection');
+      if (myConnectionEl) {
+        if (currentHelperConnectionId) {
+          myConnectionEl.hidden = false;
+          var listEl = document.getElementById('cc-my-connection-history-list');
+          if (listEl) listEl.innerHTML = '<li class="cc-connection-history-item">Loading…</li>';
+          apiRequest('/api/connections/' + encodeURIComponent(currentHelperConnectionId)).then(function (res) {
+            if (!res.ok) throw new Error('Not ok');
+            return res.json();
+          }).then(function (data) {
+            if (!data || !myConnectionEl || myConnectionEl.hidden) return;
+            populateMyConnectionSection(data);
+          }).catch(function () {
+            if (listEl) listEl.innerHTML = '<li class="cc-connection-history-item">Could not load connection.</li>';
+          });
+        } else {
+          myConnectionEl.hidden = true;
+        }
+      }
       if (modalClientDetail) modalClientDetail.hidden = false;
+    }
+
+    function populateMyConnectionSection(data) {
+      var badgeEl = document.getElementById('cc-my-connection-badge');
+      var pauseResumeBtn = document.getElementById('cc-my-connection-pause-resume');
+      var completeBtn = document.getElementById('cc-my-connection-complete');
+      var listEl = document.getElementById('cc-my-connection-history-list');
+      if (!badgeEl || !listEl) return;
+      var status = data.status || 'active';
+      var badgeClass = status === 'complete' ? 'cc-badge-complete' : status === 'paused' ? 'cc-badge-paused' : status === 'pending' ? 'cc-badge-pending' : 'cc-badge-active';
+      var badgeText = status === 'complete' ? 'Complete' : status === 'paused' ? 'Paused' : status === 'pending' ? 'Pending' : 'Active';
+      badgeEl.className = 'cc-badge ' + badgeClass;
+      badgeEl.textContent = badgeText;
+      if (pauseResumeBtn) {
+        if (status === 'paused') {
+          pauseResumeBtn.textContent = 'Resume';
+          pauseResumeBtn.setAttribute('aria-label', 'Resume connection');
+          pauseResumeBtn.className = 'cc-btn-resume';
+          pauseResumeBtn.innerHTML = '<span class="cc-btn-resume-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span> Resume';
+        } else {
+          pauseResumeBtn.textContent = 'Pause';
+          pauseResumeBtn.setAttribute('aria-label', 'Pause connection');
+          pauseResumeBtn.className = 'cc-btn-pause';
+          pauseResumeBtn.disabled = status !== 'active';
+          pauseResumeBtn.innerHTML = '<span class="cc-btn-pause-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></span> Pause';
+        }
+      }
+      if (completeBtn) completeBtn.disabled = status === 'complete';
+      var c = {
+        id: data.id,
+        history: data.createdAt ? [{ type: 'created', date: data.createdAt, by: 'Staff' }] : [],
+        updates: data.updates || []
+      };
+      var timeline = getConnectionMergedTimeline(c);
+      var html = '';
+      for (var j = 0; j < timeline.length; j++) {
+        var ev = timeline[j];
+        if (ev.type === 'system') {
+          html += '<li class="cc-connection-history-item" data-event-type="' + escapeAttr(ev.eventType) + '" data-event-date="' + escapeAttr(ev.date) + '" data-event-by="' + escapeAttr(ev.by) + '"><span class="cc-connection-history-when">' + formatHistoryDate(ev.date) + '</span> – ' + formatHistoryEventType(ev.eventType) + ' by <span class="cc-connection-history-by">' + escapeHtml(ev.by || '') + '</span></li>';
+        } else {
+          var mediaAttr = (ev.media && ev.media.length) ? escapeAttr(JSON.stringify(ev.media)) : '';
+          html += '<li class="cc-connection-history-item cc-connection-history-update" data-event-name="' + escapeAttr(ev.eventName) + '" data-event-date="' + escapeAttr(ev.date) + '" data-event-by="' + escapeAttr(ev.by) + '" data-notes="' + escapeAttr(ev.notes) + '"' + (mediaAttr ? ' data-media="' + mediaAttr + '"' : '') + '>';
+          html += '<span class="cc-connection-history-when">' + formatHistoryDate(ev.date) + '</span> – <strong>' + escapeHtml(ev.eventName || 'Session') + '</strong> by <span class="cc-connection-history-by">' + escapeHtml(ev.by || '') + '</span>';
+          if (ev.notes) html += '<p class="cc-connection-update-notes">' + escapeHtml(ev.notes) + '</p>';
+          if (ev.media && ev.media.length) {
+            html += '<div class="cc-connection-update-media">';
+            for (var m = 0; m < ev.media.length; m++) {
+              var item = ev.media[m];
+              html += '<a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener" class="cc-connection-update-media-link">' + (item.type || 'link') + ': ' + escapeHtml(item.url) + '</a> ';
+            }
+            html += '</div>';
+          }
+          html += '</li>';
+        }
+      }
+      listEl.innerHTML = html || '<li class="cc-connection-history-item" style="color:#6b7280;">No events yet.</li>';
     }
 
     function closeClientDetailModal() {
       if (modalClientDetail) modalClientDetail.hidden = true;
       currentClientCard = null;
       currentClientData = null;
+      currentHelperConnectionId = null;
+      var viewConnectionBtn = document.getElementById('cc-client-detail-view-connection-btn');
+      if (viewConnectionBtn) viewConnectionBtn.hidden = true;
+      var myConnectionEl = document.getElementById('cc-client-detail-my-connection');
+      if (myConnectionEl) myConnectionEl.hidden = true;
       showClientDetailViewMode();
       hideRemoveConfirm();
       if (clientDetailHeaderActions) clientDetailHeaderActions.style.display = '';
@@ -1318,7 +1404,8 @@
             clientName: client.name || '',
             helperName: helper.displayName || '',
             status: c.status || 'active',
-            history: [{ type: 'created', date: c.createdAt || new Date().toISOString(), by: 'Staff' }]
+            history: [{ type: 'created', date: c.createdAt || new Date().toISOString(), by: 'Staff' }],
+            updates: c.updates || []
           };
         });
         connectionsList.length = 0;
@@ -1420,6 +1507,115 @@
 
     if (overlayClientDetail) overlayClientDetail.addEventListener('click', closeClientDetailModal);
     if (btnCloseClientDetail) btnCloseClientDetail.addEventListener('click', closeClientDetailModal);
+    var btnViewConnection = document.getElementById('cc-client-detail-view-connection-btn');
+    if (btnViewConnection) {
+      btnViewConnection.addEventListener('click', function () {
+        var id = currentHelperConnectionId;
+        if (!id) return;
+        if (typeof openAddUpdateModalFromProfile === 'function') openAddUpdateModalFromProfile(id);
+      });
+    }
+
+    function setConnectionStatusInProfile(status) {
+      var id = currentHelperConnectionId;
+      if (!id) return;
+      apiRequest('/api/connections/' + encodeURIComponent(id) + '/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: status })
+      }).then(function (res) {
+        if (!res.ok) throw new Error('Request failed');
+        return res.json();
+      }).then(function () {
+        return apiRequest('/api/connections/' + encodeURIComponent(id)).then(function (r) { return r.ok ? r.json() : null; });
+      }).then(function (data) {
+        if (data) populateMyConnectionSection(data);
+        var list = window.__mmiHelperConnections;
+        if (list && list.length) {
+          for (var i = 0; i < list.length; i++) {
+            if (list[i].id === id) { list[i].status = status; break; }
+          }
+        }
+      }).catch(function () {
+        if (typeof window.__mmiShowMessage === 'function') window.__mmiShowMessage('Failed to update status.', 'error');
+        else alert('Failed to update status.');
+      });
+    }
+
+    var btnMyConnectionPauseResume = document.getElementById('cc-my-connection-pause-resume');
+    var btnMyConnectionComplete = document.getElementById('cc-my-connection-complete');
+    if (btnMyConnectionPauseResume) {
+      btnMyConnectionPauseResume.addEventListener('click', function () {
+        var badgeEl = document.getElementById('cc-my-connection-badge');
+        var isPaused = badgeEl && badgeEl.textContent === 'Paused';
+        setConnectionStatusInProfile(isPaused ? 'active' : 'paused');
+      });
+    }
+    if (btnMyConnectionComplete) btnMyConnectionComplete.addEventListener('click', function () { setConnectionStatusInProfile('complete'); });
+
+    (function () {
+      var resizeHandle = document.getElementById('cc-my-connection-resize-handle');
+      var myConnectionEl = document.getElementById('cc-client-detail-my-connection');
+      if (!resizeHandle || !myConnectionEl) return;
+      var minH = 100;
+      var maxH = function () { return Math.min(window.innerHeight * 0.8, 600); };
+      var dragging = false;
+      var startY = 0;
+      var startHeight = 0;
+
+      function getHeight() {
+        var h = myConnectionEl.style.height;
+        if (h && h !== '') return parseInt(h, 10);
+        return myConnectionEl.offsetHeight;
+      }
+
+      function onMove(clientY) {
+        if (!dragging) return;
+        var delta = startY - clientY;
+        var newH = Math.max(minH, Math.min(maxH(), startHeight + delta));
+        myConnectionEl.style.height = newH + 'px';
+      }
+
+      function onUp() {
+        dragging = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onUp);
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+      }
+
+      function onMouseMove(e) {
+        onMove(e.clientY);
+      }
+      function onTouchMove(e) {
+        if (e.touches.length && dragging) {
+          e.preventDefault();
+          onMove(e.touches[0].clientY);
+        }
+      }
+
+      resizeHandle.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        dragging = true;
+        startY = e.clientY;
+        startHeight = getHeight();
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'ns-resize';
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onUp);
+      });
+      resizeHandle.addEventListener('touchstart', function (e) {
+        if (e.touches.length !== 1) return;
+        e.preventDefault();
+        dragging = true;
+        startY = e.touches[0].clientY;
+        startHeight = getHeight();
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', onUp);
+      }, { passive: false });
+    })();
 
     var helperConnectionsList = document.getElementById('helper-connections-list');
     if (helperConnectionsList) {
@@ -1433,7 +1629,7 @@
         if (!list || !list.length) return;
         var item = list.filter(function (x) { return (x.client && x.client.id) === clientId; })[0];
         if (!item || !item.client) return;
-        openClientDetailModalReadOnly(item.client);
+        openClientDetailModalReadOnly(item.client, item.id || null);
       });
     }
 
@@ -1837,33 +2033,197 @@
     var connectionDetailContent = document.getElementById('cc-connection-detail-content');
     var connectionDetailOverlay = document.getElementById('cc-connection-detail-overlay');
     var connectionDetailClose = document.getElementById('cc-connection-detail-close');
+    var currentConnectionDetailId = null;
+    var currentConnectionDetailIsHelper = false;
 
     function openConnectionDetailModal(clientName, helperName) {
       var conn = findConnection(clientName, helperName);
       if (!conn || !connectionDetailContent) return;
-      connectionDetailContent.innerHTML = buildSingleConnectionCardHTML(conn);
+      currentConnectionDetailId = conn.id || null;
+      currentConnectionDetailIsHelper = false;
+      connectionDetailContent.innerHTML = buildSingleConnectionCardHTML(conn, false);
       if (modalConnectionDetail) modalConnectionDetail.hidden = false;
+    }
+
+    function openConnectionDetailModalById(connectionId) {
+      if (!connectionId || !connectionDetailContent) return;
+      currentConnectionDetailId = connectionId;
+      connectionDetailContent.innerHTML = '<p class="cc-client-detail-value">Loading…</p>';
+      if (modalConnectionDetail) modalConnectionDetail.hidden = false;
+      apiRequest('/api/connections/' + encodeURIComponent(connectionId)).then(function (res) {
+        if (!res.ok) {
+          connectionDetailContent.innerHTML = '<p class="message error">Could not load connection.</p>';
+          return;
+        }
+        return res.json();
+      }).then(function (data) {
+        if (!data) return;
+        var currentUser = getCurrentUser();
+        var isHelperView = !!(currentUser && data.helper && currentUser.id === data.helper.id);
+        currentConnectionDetailIsHelper = isHelperView;
+        var c = {
+          id: data.id,
+          clientName: (data.client && data.client.name) || '',
+          helperName: (data.helper && data.helper.displayName) || '',
+          status: data.status || 'active',
+          history: [],
+          updates: data.updates || []
+        };
+        if (data.createdAt) c.history = [{ type: 'created', date: data.createdAt, by: 'Staff' }];
+        connectionDetailContent.innerHTML = buildSingleConnectionCardHTML(c, isHelperView);
+      }).catch(function () {
+        connectionDetailContent.innerHTML = '<p class="message error">Could not load connection.</p>';
+      });
     }
 
     function closeConnectionDetailModal() {
       if (modalConnectionDetail) modalConnectionDetail.hidden = true;
+      currentConnectionDetailId = null;
+      currentConnectionDetailIsHelper = false;
     }
 
     function refreshConnectionDetailModal() {
       if (!modalConnectionDetail || modalConnectionDetail.hidden || !connectionDetailContent) return;
+      if (currentConnectionDetailIsHelper && currentConnectionDetailId) {
+        openConnectionDetailModalById(currentConnectionDetailId);
+        return;
+      }
       var card = connectionDetailContent.querySelector('.cc-connection-card');
       if (!card) return;
       var clientName = (card.getAttribute('data-client-name') || '').trim();
       var helperName = (card.getAttribute('data-helper-name') || '').trim();
       var conn = findConnection(clientName, helperName);
-      if (conn) connectionDetailContent.innerHTML = buildSingleConnectionCardHTML(conn);
+      if (conn) connectionDetailContent.innerHTML = buildSingleConnectionCardHTML(conn, false);
     }
 
     if (connectionDetailOverlay) connectionDetailOverlay.addEventListener('click', closeConnectionDetailModal);
     if (connectionDetailClose) connectionDetailClose.addEventListener('click', closeConnectionDetailModal);
 
+    var modalAddUpdate = document.getElementById('cc-modal-add-update');
+    var addUpdateOverlay = document.getElementById('cc-add-update-overlay');
+    var formAddUpdate = document.getElementById('cc-form-add-update');
+    var addUpdateCancel = document.getElementById('cc-add-update-cancel');
+    var addUpdateSubmit = document.getElementById('cc-add-update-submit');
+    var addUpdateEventName = document.getElementById('cc-add-update-event-name');
+    var addUpdateEventTime = document.getElementById('cc-add-update-event-time');
+    var addUpdateNotes = document.getElementById('cc-add-update-notes');
+    var addUpdateMediaList = document.getElementById('cc-add-update-media-list');
+    var addUpdateMediaUrl = document.getElementById('cc-add-update-media-url');
+    var addUpdateMediaType = document.getElementById('cc-add-update-media-type');
+    var btnAddMediaRow = document.getElementById('cc-btn-add-media-row');
+    var __mmiAddUpdateMediaItems = [];
+    var __mmiAddUpdateOpenedFromProfile = false;
+
+    function openAddUpdateModalFromProfile(connectionId) {
+      if (!connectionId || !modalAddUpdate) return;
+      currentConnectionDetailId = connectionId;
+      __mmiAddUpdateOpenedFromProfile = true;
+      openAddUpdateModal();
+    }
+
+    function openAddUpdateModal() {
+      if (!currentConnectionDetailId || !modalAddUpdate) return;
+      if (addUpdateEventName) addUpdateEventName.value = '';
+      var now = new Date();
+      var localStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + 'T' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      if (addUpdateEventTime) addUpdateEventTime.value = localStr;
+      if (addUpdateNotes) addUpdateNotes.value = '';
+      __mmiAddUpdateMediaItems = [];
+      renderAddUpdateMediaList();
+      if (addUpdateMediaUrl) addUpdateMediaUrl.value = '';
+      if (addUpdateMediaType) addUpdateMediaType.value = 'video';
+      modalAddUpdate.hidden = false;
+    }
+
+    function renderAddUpdateMediaList() {
+      if (!addUpdateMediaList) return;
+      var html = '';
+      for (var i = 0; i < __mmiAddUpdateMediaItems.length; i++) {
+        var item = __mmiAddUpdateMediaItems[i];
+        html += '<div class="cc-add-update-media-item"><a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener">' + escapeHtml(item.url) + '</a> (' + escapeHtml(item.type) + ') <button type="button" class="cc-btn-remove-media" data-index="' + i + '" aria-label="Remove">×</button></div>';
+      }
+      addUpdateMediaList.innerHTML = html;
+    }
+
+    function closeAddUpdateModal() {
+      if (modalAddUpdate) modalAddUpdate.hidden = true;
+    }
+
+    if (btnAddMediaRow && addUpdateMediaUrl && addUpdateMediaType) {
+      btnAddMediaRow.addEventListener('click', function () {
+        var url = (addUpdateMediaUrl.value || '').trim();
+        if (!url) return;
+        __mmiAddUpdateMediaItems.push({ url: url, type: addUpdateMediaType.value || 'video' });
+        renderAddUpdateMediaList();
+        addUpdateMediaUrl.value = '';
+      });
+    }
+    if (addUpdateMediaList) {
+      addUpdateMediaList.addEventListener('click', function (e) {
+        var btn = e.target.closest('.cc-btn-remove-media');
+        if (!btn) return;
+        var idx = parseInt(btn.getAttribute('data-index'), 10);
+        if (isNaN(idx) || idx < 0 || idx >= __mmiAddUpdateMediaItems.length) return;
+        __mmiAddUpdateMediaItems.splice(idx, 1);
+        renderAddUpdateMediaList();
+      });
+    }
+    if (addUpdateSubmit && formAddUpdate && addUpdateEventName && addUpdateEventTime) {
+      addUpdateSubmit.addEventListener('click', function (e) {
+        e.preventDefault();
+        var eventName = (addUpdateEventName.value || '').trim();
+        var eventTimeVal = (addUpdateEventTime.value || '').trim();
+        if (!eventName || !eventTimeVal) return;
+        var eventTime = new Date(eventTimeVal).toISOString();
+        var notes = (addUpdateNotes && addUpdateNotes.value) ? addUpdateNotes.value.trim() : undefined;
+        var media = __mmiAddUpdateMediaItems.length ? __mmiAddUpdateMediaItems : undefined;
+        var body = { eventName: eventName, eventTime: eventTime };
+        if (notes !== undefined) body.notes = notes;
+        if (media !== undefined) body.media = media;
+        apiRequest('/api/connections/' + encodeURIComponent(currentConnectionDetailId) + '/updates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        }).then(function (res) {
+          if (!res.ok) throw new Error('Request failed');
+          return res.json();
+        }).then(function () {
+          closeAddUpdateModal();
+          if (!__mmiAddUpdateOpenedFromProfile) refreshConnectionDetailModal();
+          else if (currentConnectionDetailId) {
+            apiRequest('/api/connections/' + encodeURIComponent(currentConnectionDetailId)).then(function (r) {
+              return r.ok ? r.json() : null;
+            }).then(function (data) {
+              if (data && typeof populateMyConnectionSection === 'function') populateMyConnectionSection(data);
+            });
+          }
+          __mmiAddUpdateOpenedFromProfile = false;
+          var page = (window.location.hash || '').replace('#', '').split('/')[0];
+          if (page === 'org-detail' && typeof loadDashboardData === 'function') loadDashboardData();
+        }).catch(function () {
+          if (typeof window.__mmiShowMessage === 'function') window.__mmiShowMessage('Failed to save update.', 'error');
+          else alert('Failed to save update.');
+        });
+      });
+    }
+    if (addUpdateCancel) addUpdateCancel.addEventListener('click', closeAddUpdateModal);
+    if (addUpdateOverlay) addUpdateOverlay.addEventListener('click', closeAddUpdateModal);
+    if (formAddUpdate) {
+      formAddUpdate.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (addUpdateSubmit) addUpdateSubmit.click();
+      });
+    }
+
     if (connectionDetailContent) {
       connectionDetailContent.addEventListener('click', function (e) {
+        var addUpdateBtn = e.target.closest('.cc-btn-add-update');
+        if (addUpdateBtn) {
+          e.preventDefault();
+          __mmiAddUpdateOpenedFromProfile = false;
+          openAddUpdateModal();
+          return;
+        }
         var card = e.target.closest('.cc-connection-card');
         if (!card) return;
         var clientName = (card.getAttribute('data-client-name') || '').trim();
@@ -1972,8 +2332,31 @@
       return null;
     }
 
-    /** Build HTML for one connection card (no search highlight). Used in modal and could be reused in panel. */
-    function buildSingleConnectionCardHTML(c) {
+    /** Build merged timeline (system history + session updates) sorted by date desc. */
+    function getConnectionMergedTimeline(c) {
+      var out = [];
+      var history = c.history || [];
+      for (var i = 0; i < history.length; i++) {
+        out.push({ type: 'system', date: history[i].date, eventType: history[i].type, by: history[i].by });
+      }
+      var updates = c.updates || [];
+      for (var u = 0; u < updates.length; u++) {
+        out.push({
+          type: 'update',
+          date: updates[u].eventTime,
+          eventName: updates[u].eventName,
+          notes: updates[u].notes,
+          media: updates[u].media,
+          by: updates[u].createdByDisplayName || updates[u].createdBy || 'Staff'
+        });
+      }
+      out.sort(function (a, b) { return new Date(b.date).getTime() - new Date(a.date).getTime(); });
+      return out;
+    }
+
+    /** Build HTML for one connection card (profile-style sections). isHelperView: true = show Add update, History of Engagement; false = show Pause/Resume/Complete, Connection history. */
+    function buildSingleConnectionCardHTML(c, isHelperView) {
+      isHelperView = !!isHelperView;
       var status = c.status || 'active';
       var clientEsc = (c.clientName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
       var helperEsc = (c.helperName || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -1981,33 +2364,62 @@
       var badgeText = status === 'complete' ? 'Complete' : status === 'paused' ? 'Paused' : status === 'pending' ? 'Pending' : 'Active';
       var createdDate = getConnectionCreatedDate(c);
       var dateStr = createdDate ? formatHistoryDate(createdDate) : 'Connected';
-      var html = '<article class="cc-connection-card" data-client-name="' + clientEsc + '" data-helper-name="' + helperEsc + '" data-connection-status="' + status + '">';
-      html += '<div class="cc-connection-header"><div class="cc-connection-title-row">';
-      html += '<span class="cc-connection-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>';
-      html += '<span class="cc-connection-label">Connection</span></div>';
-      html += '<span class="cc-badge ' + badgeClass + '">' + badgeText + '</span></div>';
-      html += '<p class="cc-connection-date"><span class="cc-connection-date-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>' + dateStr + '</p>';
-      html += '<div class="cc-connection-parties">';
-      html += '<div class="cc-connection-field"><label class="cc-connection-field-label">Client</label><div class="cc-connection-field-value">' + (c.clientName || '') + '</div></div>';
-      html += '<span class="cc-connection-link-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>';
-      html += '<div class="cc-connection-field"><label class="cc-connection-field-label">Helper</label><div class="cc-connection-field-value">' + (c.helperName || '') + '</div></div></div>';
+      var connId = (c.id || '').replace(/"/g, '&quot;');
+      var html = '<div class="cc-connection-card cc-connection-detail-view" data-connection-id="' + connId + '" data-client-name="' + clientEsc + '" data-helper-name="' + helperEsc + '" data-connection-status="' + status + '">';
+      html += '<section class="cc-client-detail-section">';
+      html += '<h3 class="cc-client-detail-section-title">Connection</h3>';
+      html += '<div class="cc-client-detail-field"><span class="cc-client-detail-label">Client</span><p class="cc-client-detail-value">' + (c.clientName || '') + '</p></div>';
+      html += '<div class="cc-client-detail-field"><span class="cc-client-detail-label">Helper</span><p class="cc-client-detail-value">' + (c.helperName || '') + '</p></div>';
+      html += '<div class="cc-client-detail-field"><span class="cc-client-detail-label">Status</span><p class="cc-client-detail-value"><span class="cc-badge ' + badgeClass + '">' + badgeText + '</span></p></div>';
+      html += '<div class="cc-client-detail-field"><span class="cc-client-detail-label">Connected</span><p class="cc-client-detail-value">' + dateStr + '</p></div>';
+      html += '</section>';
+      html += '<section class="cc-client-detail-section">';
+      html += '<h3 class="cc-client-detail-section-title">Actions</h3>';
       html += '<div class="cc-connection-actions">';
-      if (status === 'paused') {
-        html += '<button type="button" class="cc-btn-resume" aria-label="Resume"><span class="cc-btn-resume-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span> Resume</button>';
+      if (isHelperView) {
+        html += '<button type="button" class="cc-btn-add-update" id="cc-btn-add-connection-update" aria-label="Add update">Add update</button>';
       } else {
-        html += '<button type="button" class="cc-btn-pause" aria-label="Pause"' + (status !== 'active' ? ' disabled' : '') + '><span class="cc-btn-pause-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></span> Pause</button>';
-      }
-      html += '<button type="button" class="cc-btn-complete" aria-label="Complete"' + (status === 'complete' ? ' disabled' : '') + '><span class="cc-btn-complete-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Complete</button></div>';
-      var history = c.history || [];
-      if (history.length > 0) {
-        html += '<div class="cc-connection-history"><p class="cc-connection-history-title">Connection history</p><ul class="cc-connection-history-list" aria-label="Connection history">';
-        for (var j = history.length - 1; j >= 0; j--) {
-          var ev = history[j];
-          html += '<li class="cc-connection-history-item"><span class="cc-connection-history-when">' + formatHistoryDate(ev.date) + '</span> – ' + formatHistoryEventType(ev.type) + ' by <span class="cc-connection-history-by">' + escapeHtml(ev.by || '') + '</span></li>';
+        if (status === 'paused') {
+          html += '<button type="button" class="cc-btn-resume" aria-label="Resume"><span class="cc-btn-resume-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span> Resume</button>';
+        } else {
+          html += '<button type="button" class="cc-btn-pause" aria-label="Pause"' + (status !== 'active' ? ' disabled' : '') + '><span class="cc-btn-pause-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></span> Pause</button>';
         }
-        html += '</ul></div>';
+        html += '<button type="button" class="cc-btn-complete" aria-label="Complete"' + (status === 'complete' ? ' disabled' : '') + '><span class="cc-btn-complete-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Complete</button>';
       }
-      html += '</article>';
+      html += '</div></section>';
+      var timeline = getConnectionMergedTimeline(c);
+      var sectionTitle = isHelperView ? 'History of Engagement' : 'Connection history';
+      html += '<section class="cc-client-detail-section">';
+      html += '<h3 class="cc-client-detail-section-title">' + sectionTitle + '</h3>';
+      if (timeline.length > 0) {
+        html += '<ul class="cc-connection-history-list cc-client-detail-engagement-list" aria-label="' + sectionTitle + '">';
+        for (var j = 0; j < timeline.length; j++) {
+          var ev = timeline[j];
+          if (ev.type === 'system') {
+            html += '<li class="cc-connection-history-item" data-event-type="' + escapeAttr(ev.eventType) + '" data-event-date="' + escapeAttr(ev.date) + '" data-event-by="' + escapeAttr(ev.by) + '"><span class="cc-connection-history-when">' + formatHistoryDate(ev.date) + '</span> – ' + formatHistoryEventType(ev.eventType) + ' by <span class="cc-connection-history-by">' + escapeHtml(ev.by || '') + '</span></li>';
+          } else {
+            var mediaAttr = (ev.media && ev.media.length) ? escapeAttr(JSON.stringify(ev.media)) : '';
+            html += '<li class="cc-connection-history-item cc-connection-history-update" data-event-name="' + escapeAttr(ev.eventName) + '" data-event-date="' + escapeAttr(ev.date) + '" data-event-by="' + escapeAttr(ev.by) + '" data-notes="' + escapeAttr(ev.notes) + '"' + (mediaAttr ? ' data-media="' + mediaAttr + '"' : '') + '>';
+            html += '<span class="cc-connection-history-when">' + formatHistoryDate(ev.date) + '</span> – <strong>' + escapeHtml(ev.eventName || 'Session') + '</strong> by <span class="cc-connection-history-by">' + escapeHtml(ev.by || '') + '</span>';
+            if (ev.notes) html += '<p class="cc-connection-update-notes">' + escapeHtml(ev.notes) + '</p>';
+            if (ev.media && ev.media.length) {
+              html += '<div class="cc-connection-update-media">';
+              for (var m = 0; m < ev.media.length; m++) {
+                var item = ev.media[m];
+                var label = (item.type || 'link') + ': ';
+                html += '<a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener" class="cc-connection-update-media-link">' + label + escapeHtml(item.url) + '</a> ';
+              }
+              html += '</div>';
+            }
+            html += '</li>';
+          }
+        }
+        html += '</ul>';
+      } else {
+        html += '<p class="cc-client-detail-value" style="margin:0;color:#6b7280;">No events yet.</p>';
+      }
+      html += '</section>';
+      html += '</div>';
       return html;
     }
 
@@ -2030,6 +2442,83 @@
     function escapeHtml(s) {
       return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
+
+    function escapeAttr(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+
+    function openEventDetailModal(evData) {
+      var titleEl = document.getElementById('cc-modal-event-detail-title');
+      var bodyEl = document.getElementById('cc-event-detail-body');
+      var modalEl = document.getElementById('cc-modal-event-detail');
+      if (!bodyEl || !modalEl) return;
+      var html = '';
+      if (evData.type === 'system') {
+        if (titleEl) titleEl.textContent = 'Connection event';
+        html += '<div class="cc-event-detail-field"><span class="cc-event-detail-label">Event</span><p class="cc-event-detail-value">' + escapeHtml(formatHistoryEventType(evData.eventType)) + '</p></div>';
+        html += '<div class="cc-event-detail-field"><span class="cc-event-detail-label">Date</span><p class="cc-event-detail-value">' + escapeHtml(formatHistoryDate(evData.date)) + '</p></div>';
+        html += '<div class="cc-event-detail-field"><span class="cc-event-detail-label">By</span><p class="cc-event-detail-value">' + escapeHtml(evData.by || '') + '</p></div>';
+      } else {
+        if (titleEl) titleEl.textContent = evData.eventName || 'Session update';
+        html += '<div class="cc-event-detail-field"><span class="cc-event-detail-label">Date</span><p class="cc-event-detail-value">' + escapeHtml(formatHistoryDate(evData.date)) + '</p></div>';
+        html += '<div class="cc-event-detail-field"><span class="cc-event-detail-label">Added by</span><p class="cc-event-detail-value">' + escapeHtml(evData.by || '') + '</p></div>';
+        if (evData.notes) html += '<div class="cc-event-detail-field"><span class="cc-event-detail-label">Notes</span><p class="cc-event-detail-value">' + escapeHtml(evData.notes) + '</p></div>';
+        if (evData.media && evData.media.length) {
+          html += '<div class="cc-event-detail-field"><span class="cc-event-detail-label">Media</span><ul class="cc-event-detail-media-list">';
+          for (var i = 0; i < evData.media.length; i++) {
+            var m = evData.media[i];
+            html += '<li><a href="' + escapeHtml(m.url) + '" target="_blank" rel="noopener">' + escapeHtml((m.type || 'link') + ': ' + m.url) + '</a></li>';
+          }
+          html += '</ul></div>';
+        }
+      }
+      bodyEl.innerHTML = html;
+      modalEl.hidden = false;
+    }
+
+    function closeEventDetailModal() {
+      var modalEl = document.getElementById('cc-modal-event-detail');
+      if (modalEl) modalEl.hidden = true;
+    }
+
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('a')) return;
+      var item = e.target.closest('.cc-connection-history-item');
+      if (!item) return;
+      var eventType = item.getAttribute('data-event-type');
+      var eventDate = item.getAttribute('data-event-date');
+      if (eventType) {
+        openEventDetailModal({
+          type: 'system',
+          eventType: eventType,
+          date: eventDate,
+          by: item.getAttribute('data-event-by') || ''
+        });
+        return;
+      }
+      var eventName = item.getAttribute('data-event-name');
+      if (eventName !== null) {
+        var notes = item.getAttribute('data-notes') || '';
+        var mediaStr = item.getAttribute('data-media');
+        var media = [];
+        try {
+          if (mediaStr) media = JSON.parse(mediaStr);
+        } catch (err) {}
+        openEventDetailModal({
+          type: 'update',
+          eventName: eventName,
+          date: eventDate || '',
+          by: item.getAttribute('data-event-by') || '',
+          notes: notes,
+          media: media
+        });
+      }
+    });
+
+    var eventDetailClose = document.getElementById('cc-event-detail-close');
+    var eventDetailOverlay = document.getElementById('cc-event-detail-overlay');
+    if (eventDetailClose) eventDetailClose.addEventListener('click', closeEventDetailModal);
+    if (eventDetailOverlay) eventDetailOverlay.addEventListener('click', closeEventDetailModal);
 
     function escapeForRegex(s) {
       return (s || '').replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
@@ -2105,7 +2594,7 @@
         var helperDisplay = highlightKeyword(c.helperName, searchKw);
         var badgeDisplay = highlightKeyword(badgeText, searchKw);
         var dateDisplay = highlightKeyword('Connected ' + dateStr, searchKw);
-        html += '<article class="cc-connection-card" data-client-name="' + clientEsc + '" data-helper-name="' + helperEsc + '" data-connection-status="' + status + '">';
+        html += '<article class="cc-connection-card" data-connection-id="' + (c.id || '').replace(/"/g, '&quot;') + '" data-client-name="' + clientEsc + '" data-helper-name="' + helperEsc + '" data-connection-status="' + status + '">';
         html += '<div class="cc-connection-header">';
         html += '<div class="cc-connection-title-row">';
         html += '<span class="cc-connection-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>';
@@ -2125,19 +2614,33 @@
         }
         html += '<button type="button" class="cc-btn-complete" aria-label="Complete"' + (status === 'complete' ? ' disabled' : '') + '><span class="cc-btn-complete-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Complete</button>';
         html += '</div>';
-        var history = c.history || [];
-        if (history.length > 0) {
+        var timeline = getConnectionMergedTimeline(c);
+        if (timeline.length > 0) {
           html += '<div class="cc-connection-history">';
           html += '<p class="cc-connection-history-title">Connection history</p>';
           html += '<ul class="cc-connection-history-list" aria-label="Connection history">';
-          for (var j = history.length - 1; j >= 0; j--) {
-            var ev = history[j];
-            var label = formatHistoryEventType(ev.type);
-            var when = formatHistoryDate(ev.date);
-            var labelDisplay = highlightKeyword(label, searchKw);
-            var whenDisplay = highlightKeyword(when, searchKw);
-            var byDisplay = highlightKeyword(ev.by || '', searchKw);
-            html += '<li class="cc-connection-history-item"><span class="cc-connection-history-when">' + whenDisplay + '</span> – ' + labelDisplay + ' by <span class="cc-connection-history-by">' + byDisplay + '</span></li>';
+          for (var j = 0; j < timeline.length; j++) {
+            var ev = timeline[j];
+            var whenDisplay = highlightKeyword(formatHistoryDate(ev.date), searchKw);
+            if (ev.type === 'system') {
+              var labelDisplay = highlightKeyword(formatHistoryEventType(ev.eventType), searchKw);
+              var byDisplay = highlightKeyword(ev.by || '', searchKw);
+              html += '<li class="cc-connection-history-item" data-event-type="' + escapeAttr(ev.eventType) + '" data-event-date="' + escapeAttr(ev.date) + '" data-event-by="' + escapeAttr(ev.by) + '"><span class="cc-connection-history-when">' + whenDisplay + '</span> – ' + labelDisplay + ' by <span class="cc-connection-history-by">' + byDisplay + '</span></li>';
+            } else {
+              var mediaAttr = (ev.media && ev.media.length) ? escapeAttr(JSON.stringify(ev.media)) : '';
+              html += '<li class="cc-connection-history-item cc-connection-history-update" data-event-name="' + escapeAttr(ev.eventName) + '" data-event-date="' + escapeAttr(ev.date) + '" data-event-by="' + escapeAttr(ev.by) + '" data-notes="' + escapeAttr(ev.notes) + '"' + (mediaAttr ? ' data-media="' + mediaAttr + '"' : '') + '>';
+              html += '<span class="cc-connection-history-when">' + whenDisplay + '</span> – <strong>' + escapeHtml(ev.eventName || 'Session') + '</strong> by <span class="cc-connection-history-by">' + escapeHtml(ev.by || '') + '</span>';
+              if (ev.notes) html += '<p class="cc-connection-update-notes">' + escapeHtml(ev.notes) + '</p>';
+              if (ev.media && ev.media.length) {
+                html += '<div class="cc-connection-update-media">';
+                for (var m = 0; m < ev.media.length; m++) {
+                  var item = ev.media[m];
+                  html += '<a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener" class="cc-connection-update-media-link">' + escapeHtml(item.type || 'link') + '</a> ';
+                }
+                html += '</div>';
+              }
+              html += '</li>';
+            }
           }
           html += '</ul>';
           html += '</div>';
@@ -2301,6 +2804,13 @@
           renderConnectionsPanel();
           updateSuggestedConnectionsForAllClients();
           updateCurrentConnectionsForAllHelpers();
+          return;
+        }
+        var connectionId = card.getAttribute('data-connection-id');
+        if (connectionId) {
+          openConnectionDetailModalById(connectionId);
+        } else if (clientName && helperName) {
+          openConnectionDetailModal(clientName, helperName);
         }
       });
     }

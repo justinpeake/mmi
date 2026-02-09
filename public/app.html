@@ -633,6 +633,26 @@
           </section>
         </div>
       </div>
+      <!-- Helper only: my connection sticky at bottom of popup -->
+      <div id="cc-client-detail-my-connection" class="cc-client-detail-my-connection" hidden>
+        <div class="cc-my-connection-resize-handle" id="cc-my-connection-resize-handle" role="separator" aria-label="Drag to resize connection history"></div>
+        <div class="cc-my-connection-section">
+          <div class="cc-my-connection-header">
+            <div class="cc-my-connection-header-left">
+              <h3 class="cc-client-detail-section-title">My connection</h3>
+              <span id="cc-my-connection-badge" class="cc-badge"></span>
+            </div>
+            <div class="cc-connection-actions cc-my-connection-actions">
+                <button type="button" class="cc-btn-pause" id="cc-my-connection-pause-resume" aria-label="Pause connection"><span class="cc-btn-pause-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></span> Pause</button>
+                <button type="button" class="cc-btn-complete" id="cc-my-connection-complete" aria-label="Complete connection"><span class="cc-btn-complete-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Complete</button>
+            </div>
+          </div>
+          <h4 class="cc-my-connection-history-title">History of engagement</h4>
+          <div class="cc-my-connection-history-scroll">
+            <ul id="cc-my-connection-history-list" class="cc-connection-history-list cc-client-detail-engagement-list" aria-label="History of engagement"></ul>
+          </div>
+        </div>
+      </div>
       <div class="cc-remove-confirm" id="cc-remove-confirm" hidden>
         <p class="cc-remove-confirm-text">Are you sure you want to remove this client? This cannot be undone.</p>
         <div class="cc-modal-actions">
@@ -641,6 +661,7 @@
         </div>
       </div>
       <div class="cc-modal-actions cc-modal-actions-detail" id="cc-client-detail-actions">
+        <button type="button" class="cc-btn-view-connection" id="cc-client-detail-view-connection-btn" hidden aria-label="Add session update">Add update</button>
         <button type="button" class="cc-btn-remove" id="cc-client-detail-remove">Remove</button>
         <button type="button" class="cc-btn-cancel" id="cc-modal-client-detail-close">Close</button>
       </div>
@@ -708,11 +729,62 @@
   </div>
   <div id="cc-modal-connection-detail" class="cc-modal" role="dialog" aria-labelledby="cc-modal-connection-detail-title" aria-modal="true" hidden>
     <div class="cc-modal-overlay" id="cc-connection-detail-overlay"></div>
-    <div class="cc-modal-card cc-connection-detail-card">
-      <h2 id="cc-modal-connection-detail-title" class="cc-modal-title">Connection</h2>
-      <div id="cc-connection-detail-content" class="cc-connection-detail-content"></div>
-      <div class="cc-modal-actions">
+    <div class="cc-modal-card cc-connection-detail-card cc-modal-client-detail-card">
+      <div class="cc-modal-client-detail-header">
+        <h2 id="cc-modal-connection-detail-title" class="cc-modal-title">Connection</h2>
+      </div>
+      <div class="cc-client-detail-scroll">
+        <div id="cc-connection-detail-content" class="cc-connection-detail-content"></div>
+      </div>
+      <div class="cc-modal-actions cc-modal-actions-detail">
         <button type="button" class="cc-btn-cancel" id="cc-connection-detail-close">Close</button>
+      </div>
+    </div>
+  </div>
+  <div id="cc-modal-event-detail" class="cc-modal" role="dialog" aria-labelledby="cc-modal-event-detail-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" id="cc-event-detail-overlay"></div>
+    <div class="cc-modal-card">
+      <h2 id="cc-modal-event-detail-title" class="cc-modal-title">Event</h2>
+      <div id="cc-event-detail-body" class="cc-event-detail-body"></div>
+      <div class="cc-modal-actions">
+        <button type="button" class="cc-btn-cancel" id="cc-event-detail-close">Close</button>
+      </div>
+    </div>
+  </div>
+  <div id="cc-modal-add-update" class="cc-modal" role="dialog" aria-labelledby="cc-modal-add-update-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" id="cc-add-update-overlay"></div>
+    <div class="cc-modal-card">
+      <h2 id="cc-modal-add-update-title" class="cc-modal-title">Add update</h2>
+      <form id="cc-form-add-update" class="cc-modal-form">
+        <div class="cc-form-group">
+          <label for="cc-add-update-event-name">Event name <span class="cc-required">*</span></label>
+          <input type="text" id="cc-add-update-event-name" name="eventName" required placeholder="e.g. Session 1">
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-update-event-time">Event time <span class="cc-required">*</span></label>
+          <input type="datetime-local" id="cc-add-update-event-time" name="eventTime" required>
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-update-notes">Notes</label>
+          <textarea id="cc-add-update-notes" name="notes" rows="3" placeholder="Optional notes"></textarea>
+        </div>
+        <div class="cc-form-group">
+          <label>Media (paste URL and choose type)</label>
+          <div id="cc-add-update-media-list" class="cc-add-update-media-list"></div>
+          <div class="cc-add-update-media-row">
+            <input type="url" id="cc-add-update-media-url" placeholder="https://..." class="cc-add-update-media-url">
+            <select id="cc-add-update-media-type" class="cc-add-update-media-type" aria-label="Media type">
+              <option value="video">Video</option>
+              <option value="image">Image</option>
+              <option value="audio">Audio</option>
+            </select>
+            <button type="button" class="cc-btn-add-media-row" id="cc-btn-add-media-row" aria-label="Add media">Add</button>
+          </div>
+        </div>
+      </form>
+      <div class="cc-modal-actions">
+        <button type="button" class="cc-btn-cancel" id="cc-add-update-cancel">Cancel</button>
+        <button type="button" class="cc-btn-submit" id="cc-add-update-submit">Save update</button>
       </div>
     </div>
   </div>

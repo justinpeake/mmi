@@ -4,6 +4,7 @@ import {
   Org,
   Client,
   Connection,
+  ConnectionUpdate,
   UserType,
   ConnectionStatus,
 } from '../common/types';
@@ -14,6 +15,7 @@ export class StoreService {
   private orgs: Map<string, Org> = new Map();
   private clients: Map<string, Client> = new Map();
   private connections: Map<string, Connection> = new Map();
+  private connectionUpdates: Map<string, ConnectionUpdate> = new Map();
 
   /** Token (opaque string) -> userId. For auth. */
   private tokenToUserId: Map<string, string> = new Map();
@@ -310,5 +312,23 @@ export class StoreService {
     const updated = { ...c, ...patch };
     this.connections.set(id, updated);
     return updated;
+  }
+
+  // ---------- Connection updates (session/engagement) ----------
+  getUpdatesByConnectionId(connectionId: string): ConnectionUpdate[] {
+    return Array.from(this.connectionUpdates.values())
+      .filter((u) => u.connectionId === connectionId)
+      .sort((a, b) => new Date(b.eventTime).getTime() - new Date(a.eventTime).getTime());
+  }
+
+  addConnectionUpdate(update: Omit<ConnectionUpdate, 'id' | 'createdAt'>): ConnectionUpdate {
+    const id = this.uuid();
+    const created: ConnectionUpdate = {
+      ...update,
+      id,
+      createdAt: new Date().toISOString(),
+    };
+    this.connectionUpdates.set(id, created);
+    return created;
   }
 }
