@@ -1115,10 +1115,30 @@
 
 .cc-connection-history-item {
   margin-bottom: 0.35rem;
+  padding: 0.4rem 0.5rem;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+  padding-left: 1rem;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.cc-connection-history-item[data-event-date]:hover,
+.cc-connection-history-item[data-event-type]:hover {
+  background: #e5e7eb;
 }
 
 .cc-connection-history-item:last-child {
   margin-bottom: 0;
+}
+
+/* Only items with event data are clickable */
+.cc-connection-history-item[data-event-date],
+.cc-connection-history-item[data-event-type] {
+  cursor: pointer;
+}
+.cc-connection-history-item:not([data-event-date]):not([data-event-type]) {
+  cursor: default;
 }
 
 .cc-connection-history-when {
@@ -1270,6 +1290,21 @@
   background: #f5f3ff;
 }
 
+.cc-btn-view-connection {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #7c3aed;
+  background: #fff;
+  border: 1px solid #7c3aed;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.cc-btn-view-connection:hover {
+  background: #f5f3ff;
+}
+
 .cc-btn-save {
   padding: 0.45rem 0.9rem;
   font-size: 0.9rem;
@@ -1386,12 +1421,40 @@
   background: #ede9fe;
 }
 
-.cc-connection-detail-card .cc-connection-detail-content {
-  margin-bottom: 1.25rem;
+/* Connection detail modal – same layout as client profile popup */
+#cc-modal-connection-detail .cc-modal-card {
+  max-width: min(920px, 92vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
 }
 
-.cc-connection-detail-content .cc-connection-card {
-  max-width: 100%;
+#cc-modal-connection-detail .cc-modal-actions-detail {
+  padding: 1.25rem 1.5rem;
+  margin: 0;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+/* Connection detail content uses profile-style sections (no inner card chrome) */
+.cc-connection-detail-content .cc-connection-card.cc-connection-detail-view {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.cc-connection-detail-content .cc-connection-detail-view .cc-client-detail-field .cc-client-detail-value {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.cc-connection-detail-content .cc-connection-detail-view .cc-connection-actions {
+  margin-top: 0;
 }
 
 .cc-modal-title {
@@ -1669,6 +1732,214 @@
 
 .cc-btn-remove:hover {
   background: #b91c1c;
+}
+
+/* Add update modal */
+.cc-required {
+  color: #b91c1c;
+}
+.cc-add-update-media-list {
+  margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.cc-add-update-media-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.cc-add-update-media-url {
+  flex: 1;
+  min-width: 10rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+.cc-add-update-media-type {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+.cc-add-update-media-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+.cc-add-update-media-item a {
+  color: #7c3aed;
+  text-decoration: none;
+}
+.cc-add-update-media-item a:hover {
+  text-decoration: underline;
+}
+.cc-btn-add-media-row {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #7c3aed;
+  background: #fff;
+  border: 1px solid #7c3aed;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.cc-btn-add-media-row:hover {
+  background: #f5f3ff;
+}
+.cc-btn-remove-media {
+  padding: 0 0.4rem;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  color: #6b7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: 4px;
+}
+.cc-btn-remove-media:hover {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+.cc-connection-update-notes {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  font-weight: normal;
+  color: #374151;
+}
+.cc-connection-update-media {
+  margin-top: 0.25rem;
+}
+.cc-connection-update-media-link {
+  color: #7c3aed;
+  text-decoration: none;
+  font-size: 0.85rem;
+  margin-right: 0.5rem;
+}
+.cc-connection-update-media-link:hover {
+  text-decoration: underline;
+}
+
+/* My connection section (helper view only – sticky at bottom of client profile popup) */
+.cc-client-detail-my-connection {
+  flex-shrink: 0;
+  padding: 1rem 1.5rem;
+  padding-top: 0.5rem;
+  border-top: 2px solid #e5e7eb;
+  background: #f9fafb;
+  height: 220px;
+  min-height: 100px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cc-my-connection-resize-handle {
+  flex-shrink: 0;
+  height: 10px;
+  margin: 0 -1.5rem 0.25rem;
+  padding: 0 1.5rem;
+  cursor: ns-resize;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cc-my-connection-resize-handle::before {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+.cc-my-connection-resize-handle:hover::before {
+  background: #9ca3af;
+}
+
+.cc-client-detail-my-connection .cc-my-connection-section {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cc-my-connection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.cc-client-detail-my-connection .cc-my-connection-header .cc-client-detail-section-title {
+  margin: 0;
+}
+
+.cc-my-connection-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cc-my-connection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cc-my-connection-history-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.cc-my-connection-history-scroll {
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+}
+
+/* Event detail popup */
+.cc-event-detail-body {
+  margin-bottom: 1rem;
+}
+.cc-event-detail-body .cc-event-detail-field {
+  margin-bottom: 0.75rem;
+}
+.cc-event-detail-body .cc-event-detail-field:last-child {
+  margin-bottom: 0;
+}
+.cc-event-detail-body .cc-event-detail-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+.cc-event-detail-body .cc-event-detail-value {
+  font-size: 0.95rem;
+  color: #1a1a1a;
+}
+.cc-event-detail-body .cc-event-detail-media-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cc-event-detail-body .cc-event-detail-media-list a {
+  color: #7c3aed;
+  text-decoration: none;
+}
+.cc-event-detail-body .cc-event-detail-media-list a:hover {
+  text-decoration: underline;
 }
 
 /* Dashboard full-bleed: hide sidebar/header when showing dashboard */
