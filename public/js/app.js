@@ -472,6 +472,47 @@
     var ccPanels = document.querySelectorAll('.cc-panel');
     var ccCounts = { clients: 3, helpers: 4, connections: 1 };
 
+    /** Cards view mode: 'gallery' | 'list' – applies to all card sections, persisted in localStorage */
+    var CC_CARDS_VIEW_KEY = 'cc-cards-view';
+    function getCardsView() {
+      try {
+        var v = localStorage.getItem(CC_CARDS_VIEW_KEY);
+        return (v === 'list' || v === 'gallery') ? v : 'gallery';
+      } catch (e) {
+        return 'gallery';
+      }
+    }
+    function setCardsView(view) {
+      if (view !== 'gallery' && view !== 'list') return;
+      try {
+        localStorage.setItem(CC_CARDS_VIEW_KEY, view);
+      } catch (e) {}
+      if (document.body) document.body.setAttribute('data-cc-cards-view', view);
+      document.querySelectorAll('.cc-view-toggle-btn').forEach(function (btn) {
+        var isGallery = btn.getAttribute('data-cc-view') === 'gallery';
+        var active = (view === 'gallery' && isGallery) || (view === 'list' && !isGallery);
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    }
+    function applyCardsView() {
+      var view = getCardsView();
+      if (document.body) document.body.setAttribute('data-cc-cards-view', view);
+      document.querySelectorAll('.cc-view-toggle-btn').forEach(function (btn) {
+        var isGallery = btn.getAttribute('data-cc-view') === 'gallery';
+        var active = (view === 'gallery' && isGallery) || (view === 'list' && !isGallery);
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    }
+    applyCardsView();
+    document.addEventListener('click', function (e) {
+      var btn = e.target && e.target.closest('.cc-view-toggle-btn');
+      if (!btn) return;
+      var view = btn.getAttribute('data-cc-view');
+      if (view === 'gallery' || view === 'list') setCardsView(view);
+    });
+
     /** Who performed the action */
     function getCurrentUserName() {
       var user = getCurrentUser();

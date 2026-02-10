@@ -53,7 +53,17 @@
                 </div>
                 <button type="button" class="cc-btn-add-client" id="btn-add-org">Add organization</button>
               </div>
-              <div class="cc-cards" id="orgs-cards"></div>
+              <div class="cc-cards-wrapper">
+                <div class="cc-view-toggle-wrap cc-view-toggle-over-cards" role="group" aria-label="View mode">
+                  <button type="button" class="cc-view-toggle-btn cc-view-toggle-gallery active" aria-label="Gallery view" aria-pressed="true" data-cc-view="gallery">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                  </button>
+                  <button type="button" class="cc-view-toggle-btn cc-view-toggle-list" aria-label="List view" aria-pressed="false" data-cc-view="list">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                  </button>
+                </div>
+                <div class="cc-cards" id="orgs-cards"></div>
+              </div>
             </main>
           </div>
         </div>
@@ -96,7 +106,17 @@
                   <p class="cc-section-subtitle">You work with more than one organization. Select which one you want to work in right now.</p>
                 </div>
               </div>
-              <div class="cc-cards" id="helper-choose-org-list"></div>
+              <div class="cc-cards-wrapper">
+                <div class="cc-view-toggle-wrap cc-view-toggle-over-cards" role="group" aria-label="View mode">
+                  <button type="button" class="cc-view-toggle-btn cc-view-toggle-gallery active" aria-label="Gallery view" aria-pressed="true" data-cc-view="gallery">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                  </button>
+                  <button type="button" class="cc-view-toggle-btn cc-view-toggle-list" aria-label="List view" aria-pressed="false" data-cc-view="list">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                  </button>
+                </div>
+                <div class="cc-cards" id="helper-choose-org-list"></div>
+              </div>
             </main>
           </div>
         </div>
@@ -127,7 +147,17 @@
                   <p class="cc-section-subtitle">Connected clients and pending connection requests</p>
                 </div>
               </div>
-              <div class="cc-cards" id="helper-connections-list"></div>
+              <div class="cc-cards-wrapper">
+                <div class="cc-view-toggle-wrap cc-view-toggle-over-cards" role="group" aria-label="View mode">
+                  <button type="button" class="cc-view-toggle-btn cc-view-toggle-gallery active" aria-label="Gallery view" aria-pressed="true" data-cc-view="gallery">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                  </button>
+                  <button type="button" class="cc-view-toggle-btn cc-view-toggle-list" aria-label="List view" aria-pressed="false" data-cc-view="list">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                  </button>
+                </div>
+                <div class="cc-cards" id="helper-connections-list"></div>
+              </div>
             </main>
           </div>
         </div>
@@ -233,7 +263,16 @@
                   </div>
                   <button type="button" class="cc-btn-add-client" id="cc-btn-add-client">Add client</button>
                 </div>
-                <div class="cc-cards">
+                <div class="cc-cards-wrapper">
+                  <div class="cc-view-toggle-wrap cc-view-toggle-over-cards" role="group" aria-label="View mode">
+                    <button type="button" class="cc-view-toggle-btn cc-view-toggle-gallery active" aria-label="Gallery view" aria-pressed="true" data-cc-view="gallery">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    </button>
+                    <button type="button" class="cc-view-toggle-btn cc-view-toggle-list" aria-label="List view" aria-pressed="false" data-cc-view="list">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <div class="cc-cards">
                 <article class="cc-client-card">
                   <div class="cc-client-header">
                     <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=Margaret+Thompson&size=112&background=e9d5ff&color=6d28d9" alt="">
@@ -299,6 +338,7 @@
                   </div>
                 </article>
               </div>
+                </div>
               </div>
               <div id="cc-panel-helpers" class="cc-panel" data-cc-panel="helpers" hidden>
                 <div class="cc-section-header">
@@ -308,7 +348,16 @@
                   </div>
                   <button type="button" class="cc-btn-add-client" id="cc-btn-add-helper">Add Mentor</button>
                 </div>
-                <div class="cc-cards cc-helper-cards">
+                <div class="cc-cards-wrapper">
+                  <div class="cc-view-toggle-wrap cc-view-toggle-over-cards" role="group" aria-label="View mode">
+                    <button type="button" class="cc-view-toggle-btn cc-view-toggle-gallery active" aria-label="Gallery view" aria-pressed="true" data-cc-view="gallery">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    </button>
+                    <button type="button" class="cc-view-toggle-btn cc-view-toggle-list" aria-label="List view" aria-pressed="false" data-cc-view="list">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <div class="cc-cards cc-helper-cards">
                   <article class="cc-helper-card" data-is-active="true">
                     <div class="cc-client-header">
                       <img class="cc-client-avatar" src="https://ui-avatars.com/api/?name=Sarah+Miller&size=112&background=e9d5ff&color=6d28d9" alt="">
@@ -391,10 +440,15 @@
                     </div>
                   </article>
                 </div>
+                </div>
               </div>
               <div id="cc-panel-connections" class="cc-panel" data-cc-panel="connections" hidden>
-                <h1 class="cc-section-title">Active Connections</h1>
-                <p class="cc-section-subtitle">Manage client–mentor relationships.</p>
+                <div class="cc-section-header">
+                  <div>
+                    <h1 class="cc-section-title">Active Connections</h1>
+                    <p class="cc-section-subtitle">Manage client–mentor relationships.</p>
+                  </div>
+                </div>
                 <div class="cc-connections-filters">
                   <div class="cc-connections-filter">
                     <label for="cc-connections-filter-client-select" class="cc-connections-filter-label">Client:</label>
@@ -429,7 +483,16 @@
                     <input type="text" id="cc-connections-search" class="cc-connections-search" placeholder="Client or mentor name..." aria-label="Search connections by client or mentor name">
                   </div>
                 </div>
-                <div class="cc-connection-cards" id="cc-connection-cards">
+                <div class="cc-connection-cards-wrapper">
+                  <div class="cc-view-toggle-wrap cc-view-toggle-over-cards" role="group" aria-label="View mode">
+                    <button type="button" class="cc-view-toggle-btn cc-view-toggle-gallery active" aria-label="Gallery view" aria-pressed="true" data-cc-view="gallery">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    </button>
+                    <button type="button" class="cc-view-toggle-btn cc-view-toggle-list" aria-label="List view" aria-pressed="false" data-cc-view="list">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    </button>
+                  </div>
+                  <div class="cc-connection-cards" id="cc-connection-cards">
                   <article class="cc-connection-card" data-connection-id="1">
                     <div class="cc-connection-header">
                       <div class="cc-connection-title-row">
@@ -457,6 +520,7 @@
                       <span class="cc-btn-disconnect-icon" aria-hidden="true">×</span> Disconnect
                     </button>
                   </article>
+                </div>
                 </div>
                 <p class="cc-connections-empty" id="cc-connections-empty" hidden>No connections yet. Connect clients with mentors from the Clients or Community Mentors tabs.</p>
               </div>
