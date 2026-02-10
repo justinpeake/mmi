@@ -5,6 +5,7 @@ import {
   Client,
   Connection,
   ConnectionUpdate,
+  HelperRating,
   UserType,
   ConnectionStatus,
 } from '../common/types';
@@ -16,6 +17,7 @@ export class StoreService {
   private clients: Map<string, Client> = new Map();
   private connections: Map<string, Connection> = new Map();
   private connectionUpdates: Map<string, ConnectionUpdate> = new Map();
+  private helperRatings: Map<string, HelperRating> = new Map();
 
   /** Token (opaque string) -> userId. For auth. */
   private tokenToUserId: Map<string, string> = new Map();
@@ -160,6 +162,30 @@ export class StoreService {
       createdAt: now,
     };
     this.connections.set(conn2.id, conn2);
+
+    // 8) Sample internal ratings (org-specific; helpers never see these)
+    const rating1: HelperRating = {
+      id: this.uuid(),
+      orgId,
+      helperId: helper1.id,
+      stars: 5,
+      notes: 'Excellent mentor, very responsive.',
+      createdById: orgadmin.id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const rating2: HelperRating = {
+      id: this.uuid(),
+      orgId,
+      helperId: helper2.id,
+      stars: 4,
+      notes: 'Strong on employment topics.',
+      createdById: orgadmin.id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.helperRatings.set(rating1.id, rating1);
+    this.helperRatings.set(rating2.id, rating2);
   }
 
   // ---------- Auth (tokens) ----------
@@ -329,6 +355,46 @@ export class StoreService {
       createdAt: new Date().toISOString(),
     };
     this.connectionUpdates.set(id, created);
+    return created;
+  }
+
+  // ---------- Helper ratings (internal, org-specific; never exposed to serviceprovider) ----------
+  getHelperRating(orgId: string, helperId: string): HelperRating | null {
+    for (const r of this.helperRatings.values()) {
+      if (r.orgId === orgId && r.helperId === helperId) return r;
+    }
+    return null;
+  }
+
+  setHelperRating(
+    orgId: string,
+    helperId: string,
+    data: { stars: number; notes?: string },
+    createdById: string,
+  ): HelperRating {
+    const now = new Date().toISOString();
+    const existing = this.getHelperRating(orgId, helperId);
+    if (existing) {
+      const updated: HelperRating = {
+        ...existing,
+        stars: data.stars,
+        notes: data.notes,
+        updatedAt: now,
+      };
+      this.helperRatings.set(existing.id, updated);
+      return updated;
+    }
+    const created: HelperRating = {
+      id: this.uuid(),
+      orgId,
+      helperId,
+      stars: data.stars,
+      notes: data.notes,
+      createdById,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.helperRatings.set(created.id, created);
     return created;
   }
 }

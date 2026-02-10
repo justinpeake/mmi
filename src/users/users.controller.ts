@@ -51,7 +51,7 @@ export class UsersController {
     throw new ForbiddenException('Not allowed to access this org');
   }
 
-  /** List users in org (orgadmin / superadmin) */
+  /** List users in org (orgadmin / superadmin). Includes internalRating for serviceproviders (org-specific). */
   @Get('orgs/:orgId/users')
   listUsers(@Req() req: RequestWithUser, @Param('orgId') orgId: string) {
     this.allowSuperadminOrOrgAdmin(req, orgId);
@@ -61,7 +61,14 @@ export class UsersController {
       const orgNames = orgIds
         .map((id) => this.store.getOrgById(id)?.name)
         .filter((n): n is string => !!n);
-      return toResponse(u, orgNames);
+      const response = toResponse(u, orgNames);
+      if (u.userType === 'serviceprovider') {
+        const rating = this.store.getHelperRating(orgId, u.id);
+        if (rating) {
+          response.internalRating = { stars: rating.stars, notes: rating.notes };
+        }
+      }
+      return response;
     });
   }
 
