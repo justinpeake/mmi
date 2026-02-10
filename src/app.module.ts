@@ -12,6 +12,7 @@ import { OrgsModule } from './orgs/orgs.module';
 import { ClientsModule } from './clients/clients.module';
 import { ConnectionsModule } from './connections/connections.module';
 import { UsersModule } from './users/users.module';
+import { HelperRatingsModule } from './helper-ratings/helper-ratings.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     ClientsModule,
     ConnectionsModule,
     UsersModule,
+    HelperRatingsModule,
     HealthModule,
     ExampleModule,
   ],

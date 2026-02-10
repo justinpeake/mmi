@@ -1361,6 +1361,33 @@
       badgesEl.style.display = list.length ? '' : 'none';
     }
 
+    function starsDisplay(stars) {
+      if (stars == null || stars < 1) return '☆☆☆☆☆';
+      var n = Math.min(5, Math.max(0, Math.floor(stars)));
+      return '★'.repeat(n) + '☆'.repeat(5 - n);
+    }
+
+    function updateHelperCardInternalRating(card, helper) {
+      if (!card || !helper || !helper.id) return;
+      var block = card.querySelector('.cc-helper-internal-rating');
+      if (!block) {
+        var connectBtn = card.querySelector('.cc-btn-connect');
+        block = document.createElement('div');
+        block.className = 'cc-helper-internal-rating';
+        block.setAttribute('aria-label', 'Internal rating (not visible to mentor)');
+        if (connectBtn && connectBtn.parentNode) connectBtn.parentNode.insertBefore(block, connectBtn);
+        else card.appendChild(block);
+      }
+      var rating = helper.internalRating || {};
+      var stars = rating.stars != null ? rating.stars : null;
+      var notes = (rating.notes || '').trim();
+      block.innerHTML =
+        '<span class="cc-helper-internal-rating-label">Internal rating (not visible to mentor)</span>' +
+        '<div class="cc-helper-internal-rating-stars">' + starsDisplay(stars) + '</div>' +
+        (notes ? '<p class="cc-helper-internal-rating-notes">' + (notes.replace(/</g, '&lt;').replace(/"/g, '&quot;')) + '</p>' : '') +
+        '<button type="button" class="cc-helper-rating-edit">' + (stars != null ? 'Edit rating' : 'Add rating') + '</button>';
+    }
+
     function updateCurrentConnectionsForHelper(helperCard) {
       var listEl = helperCard.querySelector('.cc-current-list');
       if (!listEl) return;
@@ -1421,6 +1448,7 @@
           if (helper) {
             card.setAttribute('data-helper-id', helper.id);
             updateHelperCardOrgBadges(card, helper.orgNames);
+            updateHelperCardInternalRating(card, helper);
           }
         });
         renderConnectionsPanel();
@@ -1664,6 +1692,93 @@
     if (btnAddHelper) btnAddHelper.addEventListener('click', openAddHelperModal);
     if (overlayAddHelper) overlayAddHelper.addEventListener('click', closeAddHelperModal);
     if (btnCancelAddHelper) btnCancelAddHelper.addEventListener('click', closeAddHelperModal);
+
+    var modalHelperRating = document.getElementById('cc-modal-helper-rating');
+    var overlayHelperRating = document.getElementById('cc-modal-helper-rating-overlay');
+    var formHelperRating = document.getElementById('cc-form-helper-rating');
+    var btnCancelHelperRating = document.getElementById('cc-modal-helper-rating-cancel');
+    var helperRatingNotesEl = document.getElementById('cc-helper-rating-notes');
+    var helperRatingStarsContainer = document.querySelector('#cc-modal-helper-rating .cc-helper-rating-stars');
+    var currentRatingModalCard = null;
+    var currentRatingModalStars = 0;
+
+    function openHelperRatingModal(card) {
+      var helperId = card.getAttribute('data-helper-id');
+      var user = getCurrentUser();
+      if (!helperId || !user || !user.orgId) return;
+      var helpers = window.__mmiDashboardHelpers || [];
+      var helper = helpers.filter(function (h) { return h.id === helperId; })[0];
+      if (!helper) return;
+      currentRatingModalCard = card;
+      var rating = helper.internalRating || {};
+      currentRatingModalStars = rating.stars != null ? Math.min(5, Math.max(1, Math.floor(rating.stars))) : 0;
+      if (helperRatingNotesEl) helperRatingNotesEl.value = (rating.notes || '').trim();
+      if (helperRatingStarsContainer) {
+        helperRatingStarsContainer.querySelectorAll('.cc-helper-rating-star').forEach(function (btn, i) {
+          var n = i + 1;
+          btn.classList.toggle('cc-helper-rating-star-filled', n <= currentRatingModalStars);
+        });
+      }
+      var titleEl = document.getElementById('cc-modal-helper-rating-title');
+      if (titleEl) titleEl.textContent = 'Internal rating: ' + (helper.displayName || 'Mentor');
+      if (modalHelperRating) modalHelperRating.hidden = false;
+    }
+
+    function closeHelperRatingModal() {
+      currentRatingModalCard = null;
+      currentRatingModalStars = 0;
+      if (modalHelperRating) modalHelperRating.hidden = true;
+    }
+
+    if (helperRatingStarsContainer) {
+      helperRatingStarsContainer.addEventListener('click', function (e) {
+        var btn = e.target.closest('.cc-helper-rating-star');
+        if (!btn) return;
+        var n = parseInt(btn.getAttribute('data-stars'), 10);
+        if (n >= 1 && n <= 5) {
+          currentRatingModalStars = n;
+          helperRatingStarsContainer.querySelectorAll('.cc-helper-rating-star').forEach(function (b, i) {
+            b.classList.toggle('cc-helper-rating-star-filled', (i + 1) <= n);
+          });
+        }
+      });
+    }
+
+    if (formHelperRating) {
+      formHelperRating.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!currentRatingModalCard) return closeHelperRatingModal();
+        var helperId = currentRatingModalCard.getAttribute('data-helper-id');
+        var user = getCurrentUser();
+        if (!helperId || !user || !user.orgId) return closeHelperRatingModal();
+        var stars = currentRatingModalStars;
+        if (stars < 1 || stars > 5) stars = 1;
+        var notes = (helperRatingNotesEl && helperRatingNotesEl.value) ? helperRatingNotesEl.value.trim() : '';
+        apiRequest('/api/orgs/' + encodeURIComponent(user.orgId) + '/helpers/' + encodeURIComponent(helperId) + '/rating', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stars: stars, notes: notes || undefined })
+        }).then(function (res) {
+          if (!res.ok) throw new Error('Request failed');
+          return res.json();
+        }).then(function (data) {
+          var helpers = window.__mmiDashboardHelpers || [];
+          var idx = helpers.findIndex(function (h) { return h.id === helperId; });
+          if (idx >= 0) {
+            helpers[idx] = Object.assign({}, helpers[idx], { internalRating: { stars: data.stars, notes: data.notes || undefined } });
+            window.__mmiDashboardHelpers = helpers;
+          }
+          updateHelperCardInternalRating(currentRatingModalCard, helpers[idx] || { id: helperId, internalRating: { stars: data.stars, notes: data.notes } });
+          closeHelperRatingModal();
+        }).catch(function () {
+          if (typeof window.__mmiShowMessage === 'function') window.__mmiShowMessage('Failed to save rating.', 'error');
+          else alert('Failed to save rating.');
+        });
+      });
+    }
+
+    if (overlayHelperRating) overlayHelperRating.addEventListener('click', closeHelperRatingModal);
+    if (btnCancelHelperRating) btnCancelHelperRating.addEventListener('click', closeHelperRatingModal);
 
     if (formAddHelper && helpersCardsContainer) {
       formAddHelper.addEventListener('submit', function (e) {
@@ -1973,6 +2088,15 @@
 
     if (helpersCardsContainer) {
       helpersCardsContainer.addEventListener('click', function (e) {
+        var ratingEdit = e.target.closest('.cc-helper-rating-edit');
+        var ratingBlock = e.target.closest('.cc-helper-internal-rating');
+        if (ratingEdit || ratingBlock) {
+          e.preventDefault();
+          e.stopPropagation();
+          var card = (ratingEdit || ratingBlock).closest('.cc-helper-card');
+          if (card) openHelperRatingModal(card);
+          return;
+        }
         var currentCard = e.target.closest('.cc-current-card');
         if (currentCard) {
           e.preventDefault();

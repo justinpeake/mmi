@@ -420,6 +420,84 @@
   margin-top: 0.35rem;
 }
 
+/* Helper card: internal rating (org only, not visible to mentor) */
+.cc-helper-internal-rating {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.85rem;
+}
+
+.cc-helper-internal-rating-label {
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.cc-helper-internal-rating-stars {
+  color: #f59e0b;
+  letter-spacing: 0.05em;
+}
+
+.cc-helper-internal-rating-notes {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+  max-height: 2.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.cc-helper-rating-edit {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #374151;
+}
+
+.cc-helper-rating-edit:hover {
+  background: #e5e7eb;
+}
+
+/* Modal: internal rating star buttons */
+.cc-helper-rating-stars {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.cc-helper-rating-star {
+  font-size: 1.75rem;
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #d1d5db;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.cc-helper-rating-star:hover {
+  color: #f59e0b;
+  transform: scale(1.1);
+}
+
+.cc-helper-rating-star.cc-helper-rating-star-filled {
+  color: #f59e0b;
+}
+
+.cc-helper-rating-label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
 .cc-org-badge {
   display: inline-block;
   padding: 0.2rem 0.5rem;

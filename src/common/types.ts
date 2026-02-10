@@ -79,6 +79,18 @@ export interface ConnectionUpdate {
   createdAt: string;     // ISO
 }
 
+/** Internal org-only rating of a serviceprovider. Helper never sees this. */
+export interface HelperRating {
+  id: string;
+  orgId: string;
+  helperId: string;       // userId of serviceprovider
+  stars: number;          // 1-5
+  notes?: string;        // optional internal notes
+  createdById: string;    // userId who set (orgadmin/superadmin)
+  createdAt: string;     // ISO
+  updatedAt: string;     // ISO
+}
+
 /** For API responses: user without internal fields if needed */
 export interface UserResponse {
   id: string;
@@ -90,4 +102,6 @@ export interface UserResponse {
   displayName: string;
   bio?: string;
   needs?: string[];
+  /** Present only for serviceprovider when caller is orgadmin/superadmin; never exposed to helper */
+  internalRating?: { stars: number; notes?: string };
 }

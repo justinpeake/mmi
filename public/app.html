@@ -695,6 +695,32 @@
       </form>
     </div>
   </div>
+  <div id="cc-modal-helper-rating" class="cc-modal" role="dialog" aria-labelledby="cc-modal-helper-rating-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" id="cc-modal-helper-rating-overlay"></div>
+    <div class="cc-modal-card">
+      <h2 id="cc-modal-helper-rating-title" class="cc-modal-title">Internal rating (not visible to mentor)</h2>
+      <form id="cc-form-helper-rating" class="cc-modal-form">
+        <div class="cc-form-group">
+          <span class="cc-helper-rating-label">Stars (1–5)</span>
+          <div class="cc-helper-rating-stars" role="group" aria-label="Rating">
+            <button type="button" class="cc-helper-rating-star" data-stars="1" aria-label="1 star">☆</button>
+            <button type="button" class="cc-helper-rating-star" data-stars="2" aria-label="2 stars">☆</button>
+            <button type="button" class="cc-helper-rating-star" data-stars="3" aria-label="3 stars">☆</button>
+            <button type="button" class="cc-helper-rating-star" data-stars="4" aria-label="4 stars">☆</button>
+            <button type="button" class="cc-helper-rating-star" data-stars="5" aria-label="5 stars">☆</button>
+          </div>
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-helper-rating-notes">Internal notes</label>
+          <textarea id="cc-helper-rating-notes" name="notes" rows="3" placeholder="Optional notes for your org only"></textarea>
+        </div>
+        <div class="cc-modal-actions">
+          <button type="button" class="cc-btn-cancel" id="cc-modal-helper-rating-cancel">Cancel</button>
+          <button type="submit" class="cc-btn-submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <div id="cc-modal-helper-detail" class="cc-modal" role="dialog" aria-labelledby="cc-modal-helper-detail-title" aria-modal="true" hidden>
     <div class="cc-modal-overlay" id="cc-modal-helper-detail-overlay"></div>
     <div class="cc-modal-card cc-modal-client-detail-card">

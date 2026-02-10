@@ -154,17 +154,25 @@ export class ConnectionsController {
     return updated;
   }
 
-  /** List all connections for an org (orgadmin / superadmin). Includes updates per connection. */
+  /** List all connections for an org (orgadmin / superadmin). Includes updates and internalRating per helper. */
   @Get('orgs/:orgId/connections')
   listConnections(@Req() req: RequestWithUser, @Param('orgId') orgId: string) {
     this.allowSuperadminOrOrgAdmin(req, orgId);
     const list = this.store.getConnectionsByOrgId(orgId);
     return list.map((c) => {
       const updates = this.withCreatorDisplayNames(this.store.getUpdatesByConnectionId(c.id));
+      const helper = this.store.getUserById(c.helperId);
+      const rating = helper ? this.store.getHelperRating(orgId, c.helperId) : null;
+      const helperWithRating = helper
+        ? {
+            ...helper,
+            ...(rating && { internalRating: { stars: rating.stars, notes: rating.notes } }),
+          }
+        : null;
       return {
         ...c,
         client: this.store.getClientById(c.clientId),
-        helper: this.store.getUserById(c.helperId),
+        helper: helperWithRating,
         updates,
       };
     });
@@ -184,7 +192,11 @@ export class ConnectionsController {
     const client = this.store.getClientById(body.clientId);
     const helper = this.store.getUserById(body.helperId);
     if (!client || client.orgId !== orgId) throw new ForbiddenException('Client not found');
-    if (!helper || helper.orgId !== orgId || helper.userType !== 'serviceprovider') {
+    const helperInOrg =
+      helper &&
+      helper.userType === 'serviceprovider' &&
+      (helper.orgId === orgId || (helper.orgIds && helper.orgIds.includes(orgId)));
+    if (!helperInOrg) {
       throw new ForbiddenException('Helper not found');
     }
     const conn = this.store.addConnection({
