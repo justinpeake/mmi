@@ -237,6 +237,7 @@
                 <a href="#" class="cc-tab active" data-cc-tab="clients">Clients <span id="cc-count-clients" class="cc-tab-count">3</span></a>
                 <a href="#" class="cc-tab" data-cc-tab="helpers">Community Mentors <span id="cc-count-helpers" class="cc-tab-count">4</span></a>
                 <a href="#" class="cc-tab" data-cc-tab="connections">Connections <span id="cc-count-connections" class="cc-tab-count">1</span></a>
+                <a href="#" class="cc-tab" data-cc-tab="expert-directory">Expert directory <span class="cc-tab-addon">Add-on</span></a>
               </nav>
               <div class="cc-header-actions">
                 <div class="cc-settings-dropdown-wrap">
@@ -524,6 +525,46 @@
                 </div>
                 <p class="cc-connections-empty" id="cc-connections-empty" hidden>No connections yet. Connect clients with mentors from the Clients or Community Mentors tabs.</p>
               </div>
+              <div id="cc-panel-expert-directory" class="cc-panel cc-expert-directory" data-cc-panel="expert-directory" hidden>
+                <div class="cc-section-header">
+                  <div>
+                    <h1 class="cc-section-title">Expert directory (add-on)</h1>
+                    <p class="cc-section-subtitle">A directory of experts that defense teams may need: mental health, behavioral, social workers, and more.</p>
+                  </div>
+                </div>
+                <div class="cc-expert-categories" id="cc-expert-categories">
+                  <section class="cc-expert-category" data-expert-category="mental-health">
+                    <h3 class="cc-expert-category-title">Mental health</h3>
+                    <div class="cc-expert-list" id="cc-expert-list-mental-health"></div>
+                    <p class="cc-expert-empty" id="cc-expert-empty-mental-health">No experts yet.</p>
+                    <button type="button" class="cc-btn-add-expert cc-btn-add-client" data-expert-category="mental-health">Add expert</button>
+                  </section>
+                  <section class="cc-expert-category" data-expert-category="behavioral">
+                    <h3 class="cc-expert-category-title">Behavioral</h3>
+                    <div class="cc-expert-list" id="cc-expert-list-behavioral"></div>
+                    <p class="cc-expert-empty" id="cc-expert-empty-behavioral">No experts yet.</p>
+                    <button type="button" class="cc-btn-add-expert cc-btn-add-client" data-expert-category="behavioral">Add expert</button>
+                  </section>
+                  <section class="cc-expert-category" data-expert-category="social-workers">
+                    <h3 class="cc-expert-category-title">Social workers</h3>
+                    <div class="cc-expert-list" id="cc-expert-list-social-workers"></div>
+                    <p class="cc-expert-empty" id="cc-expert-empty-social-workers">No experts yet.</p>
+                    <button type="button" class="cc-btn-add-expert cc-btn-add-client" data-expert-category="social-workers">Add expert</button>
+                  </section>
+                  <section class="cc-expert-category" data-expert-category="substance-use">
+                    <h3 class="cc-expert-category-title">Substance use</h3>
+                    <div class="cc-expert-list" id="cc-expert-list-substance-use"></div>
+                    <p class="cc-expert-empty" id="cc-expert-empty-substance-use">No experts yet.</p>
+                    <button type="button" class="cc-btn-add-expert cc-btn-add-client" data-expert-category="substance-use">Add expert</button>
+                  </section>
+                  <section class="cc-expert-category" data-expert-category="trauma">
+                    <h3 class="cc-expert-category-title">Trauma</h3>
+                    <div class="cc-expert-list" id="cc-expert-list-trauma"></div>
+                    <p class="cc-expert-empty" id="cc-expert-empty-trauma">No experts yet.</p>
+                    <button type="button" class="cc-btn-add-expert cc-btn-add-client" data-expert-category="trauma">Add expert</button>
+                  </section>
+                </div>
+              </div>
             </main>
           </div>
         </div>
@@ -603,6 +644,40 @@
         <div class="cc-modal-actions">
           <button type="button" class="cc-btn-cancel" id="cc-modal-add-client-cancel">Cancel</button>
           <button type="submit" class="cc-btn-submit">Add client</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div id="cc-modal-add-expert" class="cc-modal" role="dialog" aria-labelledby="cc-modal-add-expert-title" aria-modal="true" hidden>
+    <div class="cc-modal-overlay" id="cc-modal-add-expert-overlay"></div>
+    <div class="cc-modal-card">
+      <h2 id="cc-modal-add-expert-title" class="cc-modal-title">Add expert</h2>
+      <form id="cc-form-add-expert" class="cc-modal-form">
+        <div class="cc-form-group">
+          <label for="cc-add-expert-category">Category</label>
+          <select id="cc-add-expert-category" name="category" required aria-label="Expert category">
+            <option value="mental-health">Mental health</option>
+            <option value="behavioral">Behavioral</option>
+            <option value="social-workers">Social workers</option>
+            <option value="substance-use">Substance use</option>
+            <option value="trauma">Trauma</option>
+          </select>
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-expert-name">Name</label>
+          <input type="text" id="cc-add-expert-name" name="name" required placeholder="Full name">
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-expert-title">Title / role</label>
+          <input type="text" id="cc-add-expert-title" name="title" placeholder="e.g. Licensed Therapist, LCSW">
+        </div>
+        <div class="cc-form-group">
+          <label for="cc-add-expert-contact">Contact</label>
+          <input type="text" id="cc-add-expert-contact" name="contact" placeholder="Phone or email">
+        </div>
+        <div class="cc-modal-actions">
+          <button type="button" class="cc-btn-cancel" id="cc-modal-add-expert-cancel">Cancel</button>
+          <button type="submit" class="cc-btn-submit">Add expert</button>
         </div>
       </form>
     </div>
