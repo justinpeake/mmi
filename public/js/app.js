@@ -612,6 +612,155 @@
       });
     });
 
+    /** Expert directory (add-on) – localStorage, render, add-expert modal */
+    var EXPERT_DIRECTORY_KEY = 'cc-expert-directory';
+    var EXPERT_CATEGORIES = ['mental-health', 'behavioral', 'social-workers', 'substance-use', 'trauma'];
+
+    function getExpertDirectoryStore() {
+      try {
+        var raw = localStorage.getItem(EXPERT_DIRECTORY_KEY);
+        if (!raw) return {};
+        var parsed = JSON.parse(raw);
+        return typeof parsed === 'object' && parsed !== null ? parsed : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function setExpertDirectoryStore(store) {
+      try {
+        localStorage.setItem(EXPERT_DIRECTORY_KEY, JSON.stringify(store));
+      } catch (e) {}
+    }
+
+    function getExpertsByCategory(category) {
+      var store = getExpertDirectoryStore();
+      var list = store[category];
+      return Array.isArray(list) ? list : [];
+    }
+
+    function addExpertToCategory(category, expert) {
+      var store = getExpertDirectoryStore();
+      if (!store[category]) store[category] = [];
+      store[category].push({ name: expert.name || '', title: expert.title || '', contact: expert.contact || '' });
+      setExpertDirectoryStore(store);
+    }
+
+    function removeExpertFromCategory(category, index) {
+      var store = getExpertDirectoryStore();
+      if (!Array.isArray(store[category])) return;
+      store[category].splice(index, 1);
+      setExpertDirectoryStore(store);
+    }
+
+    function escapeHtml(str) {
+      if (str == null) return '';
+      var s = String(str);
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function escapeAttr(str) {
+      if (str == null) return '';
+      return escapeHtml(str).replace(/'/g, '&#39;');
+    }
+
+    function renderExpertDirectory() {
+      EXPERT_CATEGORIES.forEach(function (category) {
+        var listEl = document.getElementById('cc-expert-list-' + category);
+        var emptyEl = document.getElementById('cc-expert-empty-' + category);
+        if (!listEl) return;
+        var experts = getExpertsByCategory(category);
+        listEl.innerHTML = '';
+        experts.forEach(function (expert, index) {
+          var name = escapeHtml(expert.name || '');
+          var title = escapeHtml(expert.title || '');
+          var contact = (expert.contact || '').trim();
+          var contactEsc = escapeHtml(contact);
+          var contactDisplay = contactEsc;
+          if (contact && (contact.indexOf('@') !== -1 || /^https?:\/\//i.test(contact))) {
+            var href = contact.indexOf('@') !== -1 ? 'mailto:' + contact : contact;
+            contactDisplay = '<a href="' + escapeAttr(href) + '" class="cc-expert-item-contact">' + contactEsc + '</a>';
+          } else if (contactEsc) {
+            contactDisplay = '<span class="cc-expert-item-contact">' + contactEsc + '</span>';
+          }
+          var item = document.createElement('div');
+          item.className = 'cc-expert-item';
+          item.setAttribute('data-expert-category', category);
+          item.setAttribute('data-expert-index', String(index));
+          item.innerHTML =
+            '<span class="cc-expert-item-name">' + name + '</span>' +
+            (title ? '<span class="cc-expert-item-title">' + title + '</span>' : '') +
+            (contactDisplay ? '<span class="cc-expert-item-contact-wrap">' + contactDisplay + '</span>' : '') +
+            '<button type="button" class="cc-expert-item-remove" aria-label="Remove expert">Remove</button>';
+          listEl.appendChild(item);
+        });
+        if (emptyEl) emptyEl.hidden = experts.length > 0;
+      });
+    }
+
+    var modalAddExpert = document.getElementById('cc-modal-add-expert');
+    var overlayAddExpert = document.getElementById('cc-modal-add-expert-overlay');
+    var formAddExpert = document.getElementById('cc-form-add-expert');
+    var categorySelectAddExpert = document.getElementById('cc-add-expert-category');
+
+    function openAddExpertModal(presetCategory) {
+      if (categorySelectAddExpert && (presetCategory || presetCategory === 0)) categorySelectAddExpert.value = presetCategory;
+      if (modalAddExpert) modalAddExpert.hidden = false;
+    }
+
+    function closeAddExpertModal() {
+      if (modalAddExpert) modalAddExpert.hidden = true;
+      if (formAddExpert) formAddExpert.reset();
+    }
+
+    if (overlayAddExpert) overlayAddExpert.addEventListener('click', closeAddExpertModal);
+    if (document.getElementById('cc-modal-add-expert-cancel')) {
+      document.getElementById('cc-modal-add-expert-cancel').addEventListener('click', closeAddExpertModal);
+    }
+    if (formAddExpert) {
+      formAddExpert.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var category = (categorySelectAddExpert && categorySelectAddExpert.value) || 'mental-health';
+        var nameEl = formAddExpert.querySelector('[name="name"]');
+        var titleEl = formAddExpert.querySelector('[name="title"]');
+        var contactEl = formAddExpert.querySelector('[name="contact"]');
+        var name = (nameEl && nameEl.value) || '';
+        var title = (titleEl && titleEl.value) || '';
+        var contact = (contactEl && contactEl.value) || '';
+        if (!name.trim()) return;
+        addExpertToCategory(category, { name: name.trim(), title: title.trim(), contact: contact.trim() });
+        renderExpertDirectory();
+        closeAddExpertModal();
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      var addBtn = e.target && e.target.closest('.cc-btn-add-expert');
+      if (addBtn) {
+        e.preventDefault();
+        var cat = addBtn.getAttribute('data-expert-category');
+        openAddExpertModal(cat || '');
+        return;
+      }
+      var removeBtn = e.target && e.target.closest('.cc-expert-item-remove');
+      if (removeBtn) {
+        e.preventDefault();
+        var item = removeBtn.closest('.cc-expert-item');
+        if (!item) return;
+        var category = item.getAttribute('data-expert-category');
+        var index = parseInt(item.getAttribute('data-expert-index'), 10);
+        if (isNaN(index) || index < 0) return;
+        removeExpertFromCategory(category, index);
+        renderExpertDirectory();
+      }
+    });
+
+    renderExpertDirectory();
+
     var modalAddClient = document.getElementById('cc-modal-add-client');
     var overlayAddClient = document.getElementById('cc-modal-add-client-overlay');
     var btnAddClient = document.getElementById('cc-btn-add-client');
